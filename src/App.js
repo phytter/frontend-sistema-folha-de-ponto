@@ -1,9 +1,13 @@
+import './App.less';
+import { BrowserRouter } from 'react-router-dom';
 
-function App() {
+import Routes from './routes'
+
+const App = () =>  {
   return (
-    <div>
-      Ola
-    </div>
+    <BrowserRouter>
+      <Routes />
+    </BrowserRouter>
   );
 }
 
