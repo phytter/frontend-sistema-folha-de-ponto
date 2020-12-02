@@ -27,7 +27,7 @@ const ContentLayout = ({ children }) => {
           <Menu.Item key="1" icon={<UserOutlined />} onClick={() => history.push("/funcionarios")}>
             Funcionários
           </Menu.Item>
-          <Menu.Item key="2" icon={<FieldTimeOutlined />} onClick={() => history.push("/")}>
+          <Menu.Item key="2" icon={<FieldTimeOutlined />} onClick={() => history.push("/folhas-de-ponto")}>
             Folhas de pontos
           </Menu.Item>
         </Menu>
