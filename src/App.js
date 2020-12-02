@@ -1,13 +1,20 @@
-import './App.less';
+import './styles/App.less';
+import GlobalStyle from './styles/globalStyle'
 import { BrowserRouter } from 'react-router-dom';
+import Painel from './Painel'
 
 import Routes from './routes'
 
 const App = () =>  {
   return (
-    <BrowserRouter>
-      <Routes />
-    </BrowserRouter>
+    <>
+      <BrowserRouter>
+        <Painel>
+          <Routes />
+        </Painel>
+      </BrowserRouter>
+      <GlobalStyle />
+    </>
   );
 }
 
