@@ -160,7 +160,8 @@ import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-d
     const ms_lt = moment(segundaSaida,"DD/MM/YYYY HH:mm").diff(moment(segundaEntrada,"DD/MM/YYYY HH:mm"));
     let d_lt = moment.duration(ms_lt);
     const last_time = Math.floor(d_lt.asHours()) + moment.utc(ms_lt).format(":mm")
-    console.log(last_time)
+    // console.log(last_time)
+    // qtd de horas trabalhado
     console.log(moment.utc(ms_ft + ms_lt).format("hh:mm"))
 
     const init_noturno = `${day_month}/${month}/${created_at.getFullYear()} 21:00`
@@ -181,10 +182,25 @@ import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-d
   }
 
   // 100%
-  // let ms_h100 = 0;
-  // if(day_week === 6) {
-  //   ms_h100 += ;
-  // }
+  let ms_h100 = 0;
+  if(day_week === 5) {
+    const init_h100 = `${day_month}/${month}/${created_at.getFullYear()} 13:00`
+    const out_100 = `${day_month}/${month}/${created_at.getFullYear()} 21:00`
+    if (hh_entry > 13 && hh_out_lunch <= 21) {
+      ms_h100 += moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(primeiraPartida,"DD/MM/YYYY HH:mm"));
+    } else if (hh_out_lunch > 12 ) {
+      ms_h100 += moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(init_h100,"DD/MM/YYYY HH:mm"));
+    }
+
+    if (hh_back_lunch > 13 && hh_out <= 21) {
+      ms_h100 += moment(segundaSaida,"DD/MM/YYYY HH:mm").diff(moment(segundaEntrada,"DD/MM/YYYY HH:mm"));
+    } else if (hh_out_lunch > 12 ) {
+      ms_h100 += moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(init_h100,"DD/MM/YYYY HH:mm"));
+    }
+    ms_h100 += moment(segundaEntrada,"DD/MM/YYYY HH:mm").diff(moment(out_100,"DD/MM/YYYY HH:mm"));
+    // if (hh_entry )
+    // ms_h100 += ;
+  }
 
   // 50%
     if (day_week < 6) {
