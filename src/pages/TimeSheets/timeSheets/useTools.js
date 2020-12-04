@@ -30,29 +30,29 @@ export default (list, mutate) => {
     var mes = data.getMonth();
     var ano = data.getFullYear();
 
-    switch (diaS) { //converte o numero em nome do dia
-     case 0:
-      diaS = "Domingo";
-      break;
-     case 1:
-      diaS = "Segunda-feira";
-      break;
-     case 2:
-      diaS = "Terça-feira";
-      break;
-     case 3:
-      diaS = "Quarta-feira";
-      break;
-     case 4:
-      diaS = "Quinta-feira";
-      break;
-     case 5:
-      diaS = "Sexta-feira";
-      break;
-     case 6:
-      diaS = "Sabado";
-      break;
-     }
+    // switch (diaS) { //converte o numero em nome do dia
+    //  case 0:
+    //   diaS = "Domingo";
+    //   break;
+    //  case 1:
+    //   diaS = "Segunda-feira";
+    //   break;
+    //  case 2:
+    //   diaS = "Terça-feira";
+    //   break;
+    //  case 3:
+    //   diaS = "Quarta-feira";
+    //   break;
+    //  case 4:
+    //   diaS = "Quinta-feira";
+    //   break;
+    //  case 5:
+    //   diaS = "Sexta-feira";
+    //   break;
+    //  case 6:
+    //   diaS = "Sabado";
+    //   break;
+    //  }
 
     // switch (mes) { //converte o numero em nome do mês
     //  case 0:
@@ -117,14 +117,14 @@ export default (list, mutate) => {
     const current_date = new Date();
     const year = current_date.getFullYear();
     let [ f_month, l_month] = mes_ref;
-    const day_init = new Date (year, f_month, 20);
+    const day_init = new Date (year, f_month, 20 + 1);
     const day_end = new Date (year, f_month+1, 20);
 
     let days_arr = [];
     let f_day = formataData(day_init)
     let f_day_l_day = formataData(new Date (year, f_month+1, 0))
-    const num_days = parseInt(f_day_l_day[1]) - parseInt(f_day[1]) + 20
-    days_arr.push({ day_month: f_day[1], day_week: f_day[0],month: f_day[2], ...defaultValues})
+    const num_days = parseInt(f_day_l_day[1]) - parseInt(f_day[1]) + 21
+    // days_arr.push({ day_month: f_day[1], day_week: f_day[0],month: f_day[2],id: 0, ...defaultValues})
     let it = 1
     while (it <= num_days) {
         const current_day = formataData(new Date (year, f_month, 20 + it))
@@ -132,6 +132,7 @@ export default (list, mutate) => {
           day_month: current_day[1],
           day_week: current_day[0],
           month: current_day[2],
+          id: it,
           ...defaultValues,
         })
         it++

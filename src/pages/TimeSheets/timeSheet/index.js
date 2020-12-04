@@ -10,6 +10,7 @@ import simpleTableTools from '../../common/simpleTableTools';
 import { useApiPagination } from '../../../hooks/useApi';
 import moment from 'moment';
 import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
+import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from './utils';
 // import useTools from './useTools'
 
  const TimeSheets = (props) => {
@@ -81,7 +82,7 @@ import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-d
           name={dataIndex}
           rules={[
             {
-              required: true,
+              required: false,
               message: `${title} é obrigatório.`,
             },
           ]}
@@ -106,120 +107,180 @@ import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-d
     const newData = [...dataSource.days];
     const index = newData.findIndex(item => row.id === item.id);
     const item = newData[index];
-    newData.splice(index, 1, {
-      ...item,
-      ...row,
-    });
-    console.log(newData)
-    setDataSource(prev => ({...prev, days: newData}));
     // this.setState({ dataSource: newData });
 
-
-//     back_lunch: "30:60"
-// ​​
-//     day_month: 20
-//     ​​
-//     day_week: "Segunda-feira"
-//     ​​
-//     entry: "20:36"
-//     ​​
-//     out: "10:20"
-//     ​​
-//     out_lunch: "10:56"
   const { createdAt, regarding} = dataSource;
   const created_at = new Date(createdAt);
 
   const { back_lunch, day_month, day_week, entry, out_lunch, out, month } = row;
-
-  let ms_ft = 0;
-  let [hh_out_lunch,mm_out_lunch] = out_lunch.split(':');
-  hh_out_lunch = parseInt(hh_out_lunch); mm_out_lunch = parseInt(mm_out_lunch);
-  let [hh_entry, mm_entry] = entry.split(':');
-  hh_entry = parseInt(hh_entry); mm_entry = parseInt(mm_entry);
-
-  const primeiraSaida = `${day_month}/${month}/${created_at.getFullYear()} ${hh_out_lunch}:${mm_out_lunch}`
-  const primeiraPartida = `${day_month}/${month}/${created_at.getFullYear()} ${hh_entry}:${mm_entry}`
-
-  if (out_lunch && entry) {
-    ms_ft = moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(primeiraPartida,"DD/MM/YYYY HH:mm"));
-    let d = moment.duration(ms_ft);
-    const first_time = Math.floor(d.asHours()) + moment.utc(ms_ft).format(":mm")
-    console.log(first_time)
-  }
-
-  let [hh_out,mm_out] = out.split(':');
-  hh_out = parseInt(hh_out); mm_out = parseInt(mm_out);
-  let [hh_back_lunch, mm_back_lunch] = back_lunch.split(':');
-  hh_back_lunch = parseInt(hh_back_lunch); mm_back_lunch = parseInt(mm_back_lunch);
-
-  if (out && back_lunch) {
-
-    const segundaSaida = `${day_month}/${month}/${created_at.getFullYear()} ${hh_out}:${mm_out}`
-    const segundaEntrada = `${day_month}/${month}/${created_at.getFullYear()} ${hh_back_lunch}:${mm_back_lunch}`
-
-    const ms_lt = moment(segundaSaida,"DD/MM/YYYY HH:mm").diff(moment(segundaEntrada,"DD/MM/YYYY HH:mm"));
-    let d_lt = moment.duration(ms_lt);
-    const last_time = Math.floor(d_lt.asHours()) + moment.utc(ms_lt).format(":mm")
-    // console.log(last_time)
-    // qtd de horas trabalhado
-    console.log(moment.utc(ms_ft + ms_lt).format("hh:mm"))
-
-    const init_noturno = `${day_month}/${month}/${created_at.getFullYear()} 21:00`
-    const out_noturno = `${day_month}/${month}/${created_at.getFullYear()} 05:00`
-
-    const init_h50 = `${day_month}/${month}/${created_at.getFullYear()} 17:00`
-    const out_h50 = `${day_month}/${month}/${created_at.getFullYear()} 21:00`
-
-    let ms_an = moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(init_noturno,"DD/MM/YYYY HH:mm"));
-    ms_an += moment(out_noturno,"DD/MM/YYYY HH:mm").diff(moment(segundaEntrada,"DD/MM/YYYY HH:mm"));
-    console.log(moment.utc(ms_an).format("hh:mm"))
-
-    // 50%
-    let ms_h50 = moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(hh_entry < 17 ? init_h50 : primeiraPartida ,"DD/MM/YYYY HH:mm"));
-    ms_h50 += moment(hh_out > 21 ? out_h50 : segundaSaida,"DD/MM/YYYY HH:mm").diff(moment(segundaEntrada,"DD/MM/YYYY HH:mm"));
-    console.log(moment.utc(ms_h50).format("hh:mm"))
-
-  }
-
-  // 100%
   let ms_h100 = 0;
-  if(day_week === 5) {
-    const init_h100 = `${day_month}/${month}/${created_at.getFullYear()} 13:00`
-    const out_100 = `${day_month}/${month}/${created_at.getFullYear()} 21:00`
-    if (hh_entry > 13 && hh_out_lunch <= 21) {
-      ms_h100 += moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(primeiraPartida,"DD/MM/YYYY HH:mm"));
-    } else if (hh_out_lunch > 12 ) {
-      ms_h100 += moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(init_h100,"DD/MM/YYYY HH:mm"));
-    }
+  let ms_an = 0;
+  let ms_ft = 0;
+  let flag_next_day = false
 
-    if (hh_back_lunch > 13 && hh_out <= 21) {
-      ms_h100 += moment(segundaSaida,"DD/MM/YYYY HH:mm").diff(moment(segundaEntrada,"DD/MM/YYYY HH:mm"));
-    } else if (hh_out_lunch > 12 ) {
-      ms_h100 += moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(init_h100,"DD/MM/YYYY HH:mm"));
-    }
-    ms_h100 += moment(segundaEntrada,"DD/MM/YYYY HH:mm").diff(moment(out_100,"DD/MM/YYYY HH:mm"));
-    // if (hh_entry )
-    // ms_h100 += ;
+  // Horario da primeira parte
+    let [hh_out_lunch,mm_out_lunch] = out_lunch.split(':');
+    hh_out_lunch = parseInt(hh_out_lunch); mm_out_lunch = parseInt(mm_out_lunch);
+    let [hh_entry, mm_entry] = entry.split(':');
+    hh_entry = parseInt(hh_entry); mm_entry = parseInt(mm_entry);
+    if (hh_out_lunch < hh_entry) flag_next_day = true;
+
+  // ponto da primeira parte
+    let primeiraSaida = `${hh_out_lunch < hh_entry ? day_month + 1 : day_month}/${month}/${created_at.getFullYear()} ${hh_out_lunch}:${mm_out_lunch}`
+    let primeiraEntrada = `${day_month}/${month}/${created_at.getFullYear()} ${hh_entry}:${mm_entry}`
+    primeiraSaida = moment(primeiraSaida,"DD/MM/YYYY HH:mm")
+    primeiraEntrada = moment(primeiraEntrada,"DD/MM/YYYY HH:mm")
+
+  // Horário da segunda parte
+    let [hh_out,mm_out] = out.split(':');
+    hh_out = parseInt(hh_out); mm_out = parseInt(mm_out);
+    let [hh_back_lunch, mm_back_lunch] = back_lunch.split(':');
+    hh_back_lunch = parseInt(hh_back_lunch); mm_back_lunch = parseInt(mm_back_lunch);
+
+  // Ponto da segunda parte
+    let segundaEntrada = `${hh_back_lunch < hh_out_lunch || flag_next_day ?
+      day_month + 1 : day_month
+    }/${month}/${created_at.getFullYear()} ${hh_back_lunch}:${mm_back_lunch}`
+
+    let segundaSaida = `${hh_out < hh_entry || hh_out < hh_back_lunch ? // hh_out < hh_back_lunch || hh_out < hh_out_lunch || flag_next_day ||
+                            day_month + 1 : day_month
+                          }/${month}/${created_at.getFullYear()} ${hh_out}:${mm_out}`
+    segundaSaida = moment(segundaSaida,"DD/MM/YYYY HH:mm")
+    segundaEntrada = moment(segundaEntrada,"DD/MM/YYYY HH:mm")
+
+  const ms_tr = calc_horas_trabalhada(
+    primeiraEntrada,
+    primeiraSaida,
+    segundaEntrada,
+    segundaSaida,
+    hh_out_lunch,
+    hh_back_lunch,
+    hh_entry,
+    hh_out,
+  );
+  // Math.floor(d.asHours()) + moment.utc(ms_ft).format(":mm")
+  const d_htrabalhadas = moment.duration(ms_tr)
+  console.log( Math.floor(d_htrabalhadas.asHours()) + moment.utc(ms_tr).format(":mm"), 'Horas trabalhadas');
+
+  ms_an = calc_noturno(
+    primeiraEntrada,
+    primeiraSaida,
+    segundaEntrada,
+    segundaSaida,
+    hh_out_lunch,
+    hh_back_lunch,
+    hh_entry,
+    hh_out,
+    created_at,
+    row
+  );
+
+  let ms_comercial = calc_comercial(
+    primeiraEntrada,
+    primeiraSaida,
+    segundaEntrada,
+    segundaSaida,
+    hh_out_lunch,
+    hh_back_lunch,
+    hh_entry,
+    hh_out,
+    created_at,
+    row
+  );
+
+  console.log(moment.utc(ms_an).format("hh:mm"), 'noturno');
+  // console.log(init_noturno > out_noturno);
+  // Extra 50%
+  // if (day_week < 5) {
+  //   const init_h50 = `${day_month}/${month}/${created_at.getFullYear()} 17:00`
+  //   const out_h50 = `${day_month}/${month}/${created_at.getFullYear()} 21:00`
+  //   let ms_h50 = moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(hh_entry < 17 ? init_h50 : primeiraEntrada ,"DD/MM/YYYY HH:mm"));
+  //   ms_h50 += moment(hh_out > 21 ? out_h50 : segundaSaida,"DD/MM/YYYY HH:mm").diff(moment(segundaEntrada,"DD/MM/YYYY HH:mm"));
+  //   console.log(moment.utc(ms_h50).format("hh:mm"))
+  // }
+
+  // Horário 100%
+  ms_h100 = calc_100(
+    primeiraEntrada,
+    primeiraSaida,
+    segundaEntrada,
+    segundaSaida,
+    hh_out_lunch,
+    hh_back_lunch,
+    hh_entry,
+    hh_out,
+    day_week,
+    month,
+    created_at,
+    day_month
+  )
+
+  const horas_normal = moment.duration('8', 'h').asMilliseconds();
+  console.log(moment.utc(ms_comercial).format("hh:mm"), 'Horas comercial trabalhadas')
+  let hsan = 0, hcan = 0, h50 = 0, h100 = ms_h100;
+  if (ms_an) {
+    hsan = ms_an - ms_comercial;
+    hcan = ms_an - hsan
+    console.log(moment.utc(hsan).format("hh:mm"), 'hsan')
+    console.log(moment.utc(hcan).format("hh:mm"), 'hcan')
+    h50 = ms_tr - ms_comercial - ms_an - ms_h100
+  } else if (ms_tr > horas_normal)
+    h50 = ms_tr - horas_normal
+
+  console.log(moment.utc(h50).format("hh:mm"), 'h50')
+
+  if(day_week === 0) {
+    h100 = ms_comercial;
   }
 
-  // 50%
-    if (day_week < 6) {
+  newData.splice(index, 1, {
+    ...item,
+    ...row,
+    ...{hsan, hcan, h100, h50},
+  });
+  // debugger
+  setDataSource(prev => ({...prev, days: newData}));
+  // ms_ft = moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(primeiraPartida,"DD/MM/YYYY HH:mm"));
+  // let d = moment.duration(ms_ft);
+  // first_time = Math.floor(d.asHours()) + moment.utc(ms_ft).format(":mm")
+};
 
-    }
-
-    // an
-    if ( hh_entry >= 21 ) {
-
-    }
-    // const [hh_out_lunch,mm_out_lunch] = out_lunch.split(':');
-    // const [hh_entry, mm_entry] = entry.split(':');
-  };
+  const show_name_day = (dia) => {
+    let diaS = '';
+    switch (dia) { //converte o numero em nome do dia
+      case 0:
+       diaS = "Domingo";
+       break;
+      case 1:
+       diaS = "Segunda-feira";
+       break;
+      case 2:
+       diaS = "Terça-feira";
+       break;
+      case 3:
+       diaS = "Quarta-feira";
+       break;
+      case 4:
+       diaS = "Quinta-feira";
+       break;
+      case 5:
+       diaS = "Sexta-feira";
+       break;
+      case 6:
+       diaS = "Sabado";
+       break;
+      }
+    return diaS
+  }
 
   const collumns = [
     {
       title: 'Dia',
       dataIndex: 'day_month',
       width: '10%',
+      render: (text, record) => {
+        return `${text} ${show_name_day(record.day_week)}`
+      }
     },
     {
       title: 'Entrada',
@@ -248,18 +309,42 @@ import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-d
     {
       title: '50%',
       dataIndex: 'h50',
+      render: (text) => {
+        if (!text) return null;
+        let d = moment.duration(text);
+        const time = Math.floor(d.asHours()) + moment.utc(text).format(":mm")
+        return time;
+      }
     },
     {
       title: '100%',
       dataIndex: 'h100',
+      render: (text) => {
+        if (!text) return null;
+        let d = moment.duration(text);
+        const time = Math.floor(d.asHours()) + moment.utc(text).format(":mm")
+        return time;
+      }
     },
     {
       title: 'HCAN',
       dataIndex: 'hcan',
+      render: (text) => {
+        if (!text) return null;
+        let d = moment.duration(text);
+        const time = Math.floor(d.asHours()) + moment.utc(text).format(":mm")
+        return time;
+      }
     },
     {
       title: 'HSAN',
       dataIndex: 'hsan',
+      render: (text) => {
+        if (!text) return null;
+        let d = moment.duration(text);
+        const time = Math.floor(d.asHours()) + moment.utc(text).format(":mm")
+        return time;
+      }
     },
   ]
 
@@ -300,7 +385,7 @@ import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-d
       bordered
       dataSource={dataSource.days}
       columns={columns}
-      rowKey='_id'
+      rowKey='id'
     />
 
   </Container>
