@@ -20,7 +20,7 @@ import { Link } from 'react-router-dom';
     handleTableChange,
   } = useApiPagination(`/employers`, { sorter: 'name' });
 
-  const list = data ?? [];
+  const list = data?.docs ?? [];
 
   const collums = [
     {

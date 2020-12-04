@@ -3,10 +3,12 @@ import React, { useRef, useContext, useState, useEffect, useMemo } from 'react';
 import { Button, Input, Form, Table, Space, Modal, Tooltip } from 'antd';
 import { Container } from './styles'
 import { Header, Title, Popconfirm,GoBack } from '../../common/components';
+import InputMask from "react-input-mask";
 import { baseApi as api} from '../../../config/api';
 import { ReadOutlined } from '@ant-design/icons';
 import simpleTableTools from '../../common/simpleTableTools';
 import { useApiPagination } from '../../../hooks/useApi';
+import moment from 'moment';
 import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 // import useTools from './useTools'
 
@@ -33,6 +35,8 @@ import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-d
     );
   };
 
+  const TIME_MASK = [/^([0-2])/, /([0-9])/, ":", /[0-5]/, /[0-9]/]
+
   const EditableCell = ({
     title,
     editable,
@@ -48,7 +52,7 @@ import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-d
 
     useEffect(() => {
       if (editing) {
-        inputRef.current.focus();
+        // inputRef.current.focus();
       }
     }, [editing]);
 
@@ -78,11 +82,15 @@ import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-d
           rules={[
             {
               required: true,
-              message: `${title} is required.`,
+              message: `${title} é obrigatório.`,
             },
           ]}
         >
-          <Input ref={inputRef} onPressEnter={save} onBlur={save} />
+          {/* <Input ref={inputRef} onPressEnter={save} onBlur={save} /> */}
+          {/* <InputMask ref={inputRef} mask={TIME_MASK} onPressEnter={save} onBlur={save}  /> */}
+          <InputMask mask="99:99" onPressEnter={save} onBlur={save}>
+            {(inputProps) => <Input {...inputProps} ref={inputRef}  />}
+          </InputMask>
         </Form.Item>
       ) : (
         <div className="editable-cell-value-wrap" style={{ paddingRight: 24 }} onClick={toggleEdit}>
@@ -102,8 +110,93 @@ import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-d
       ...item,
       ...row,
     });
-    setDataSource(prev => ({...prev, days: newData}))
+    console.log(newData)
+    setDataSource(prev => ({...prev, days: newData}));
     // this.setState({ dataSource: newData });
+
+
+//     back_lunch: "30:60"
+// ​​
+//     day_month: 20
+//     ​​
+//     day_week: "Segunda-feira"
+//     ​​
+//     entry: "20:36"
+//     ​​
+//     out: "10:20"
+//     ​​
+//     out_lunch: "10:56"
+  const { createdAt, regarding} = dataSource;
+  const created_at = new Date(createdAt);
+
+  const { back_lunch, day_month, day_week, entry, out_lunch, out, month } = row;
+
+  let ms_ft = 0;
+  let [hh_out_lunch,mm_out_lunch] = out_lunch.split(':');
+  hh_out_lunch = parseInt(hh_out_lunch); mm_out_lunch = parseInt(mm_out_lunch);
+  let [hh_entry, mm_entry] = entry.split(':');
+  hh_entry = parseInt(hh_entry); mm_entry = parseInt(mm_entry);
+
+  const primeiraSaida = `${day_month}/${month}/${created_at.getFullYear()} ${hh_out_lunch}:${mm_out_lunch}`
+  const primeiraPartida = `${day_month}/${month}/${created_at.getFullYear()} ${hh_entry}:${mm_entry}`
+
+  if (out_lunch && entry) {
+    ms_ft = moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(primeiraPartida,"DD/MM/YYYY HH:mm"));
+    let d = moment.duration(ms_ft);
+    const first_time = Math.floor(d.asHours()) + moment.utc(ms_ft).format(":mm")
+    console.log(first_time)
+  }
+
+  let [hh_out,mm_out] = out.split(':');
+  hh_out = parseInt(hh_out); mm_out = parseInt(mm_out);
+  let [hh_back_lunch, mm_back_lunch] = back_lunch.split(':');
+  hh_back_lunch = parseInt(hh_back_lunch); mm_back_lunch = parseInt(mm_back_lunch);
+
+  if (out && back_lunch) {
+
+    const segundaSaida = `${day_month}/${month}/${created_at.getFullYear()} ${hh_out}:${mm_out}`
+    const segundaEntrada = `${day_month}/${month}/${created_at.getFullYear()} ${hh_back_lunch}:${mm_back_lunch}`
+
+    const ms_lt = moment(segundaSaida,"DD/MM/YYYY HH:mm").diff(moment(segundaEntrada,"DD/MM/YYYY HH:mm"));
+    let d_lt = moment.duration(ms_lt);
+    const last_time = Math.floor(d_lt.asHours()) + moment.utc(ms_lt).format(":mm")
+    console.log(last_time)
+    console.log(moment.utc(ms_ft + ms_lt).format("hh:mm"))
+
+    const init_noturno = `${day_month}/${month}/${created_at.getFullYear()} 21:00`
+    const out_noturno = `${day_month}/${month}/${created_at.getFullYear()} 05:00`
+
+    const init_h50 = `${day_month}/${month}/${created_at.getFullYear()} 17:00`
+    const out_h50 = `${day_month}/${month}/${created_at.getFullYear()} 21:00`
+
+    let ms_an = moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(init_noturno,"DD/MM/YYYY HH:mm"));
+    ms_an += moment(out_noturno,"DD/MM/YYYY HH:mm").diff(moment(segundaEntrada,"DD/MM/YYYY HH:mm"));
+    console.log(moment.utc(ms_an).format("hh:mm"))
+
+    // 50%
+    let ms_h50 = moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(hh_entry < 17 ? init_h50 : primeiraPartida ,"DD/MM/YYYY HH:mm"));
+    ms_h50 += moment(hh_out > 21 ? out_h50 : segundaSaida,"DD/MM/YYYY HH:mm").diff(moment(segundaEntrada,"DD/MM/YYYY HH:mm"));
+    console.log(moment.utc(ms_h50).format("hh:mm"))
+
+  }
+
+  // 100%
+  // let ms_h100 = 0;
+  // if(day_week === 6) {
+  //   ms_h100 += ;
+  // }
+
+  // 50%
+    if (day_week < 6) {
+
+    }
+
+    // an
+    if ( hh_entry >= 21 ) {
+
+    }
+    // const [hh_out_lunch,mm_out_lunch] = out_lunch.split(':');
+    // const [hh_entry, mm_entry] = entry.split(':');
   };
 
   const collumns = [
@@ -191,6 +284,7 @@ import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-d
       bordered
       dataSource={dataSource.days}
       columns={columns}
+      rowKey='_id'
     />
 
   </Container>

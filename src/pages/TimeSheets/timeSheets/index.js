@@ -22,7 +22,7 @@ import { Link } from 'react-router-dom';
     handleTableChange,
   } = useApiPagination(`/time-sheets`, { sorter: 'name' });
 
-  const list = data ?? [];
+  const list = data?.docs ?? [];
 
   const {
     handleDelete,
@@ -89,7 +89,7 @@ import { Link } from 'react-router-dom';
       render: (text, record) => (
         <Space size="middle">
           <Tooltip title='Editar'>
-            <Link to={`/folhas-de-ponto/1/list/${record.id}/edit`}>
+            <Link to={`/folhas-de-ponto/1/list/${record._id}/edit`}>
               <Button
                 // onClick={() => [setSelected(record), setVisibleForm(true)]}
                 size="small"
@@ -98,8 +98,8 @@ import { Link } from 'react-router-dom';
             </Link>
           </Tooltip>
           <Popconfirm
-              description={record.name}
-              onConfirm={() => handleDelete(record.id)}
+              description={'este item'}
+              onConfirm={() => handleDelete(record._id)}
             >
               <Button size="small" icon={<DeleteOutlined />} />
             </Popconfirm>

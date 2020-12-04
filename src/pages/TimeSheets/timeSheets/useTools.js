@@ -54,44 +54,44 @@ export default (list, mutate) => {
       break;
      }
 
-    switch (mes) { //converte o numero em nome do mês
-     case 0:
-      mes = "Janeiro";
-      break;
-     case 1:
-      mes = "Fevereiro";
-      break;
-     case 2:
-      mes = "Março";
-      break;
-     case 3:
-      mes = "Abril";
-      break;
-     case 4:
-      mes = "Maio";
-      break;
-     case 5:
-      mes = "Junho";
-      break;
-     case 6:
-      mes = "Julho";
-      break;
-     case 7:
-      mes = "Agosto";
-      break;
-     case 8:
-      mes = "Setembro";
-      break;
-     case 9:
-      mes = "Outubro";
-      break;
-     case 10:
-      mes = "Novembro";
-      break;
-     case 11:
-      mes = "Dezembro";
-      break;
-     }
+    // switch (mes) { //converte o numero em nome do mês
+    //  case 0:
+    //   mes = "Janeiro";
+    //   break;
+    //  case 1:
+    //   mes = "Fevereiro";
+    //   break;
+    //  case 2:
+    //   mes = "Março";
+    //   break;
+    //  case 3:
+    //   mes = "Abril";
+    //   break;
+    //  case 4:
+    //   mes = "Maio";
+    //   break;
+    //  case 5:
+    //   mes = "Junho";
+    //   break;
+    //  case 6:
+    //   mes = "Julho";
+    //   break;
+    //  case 7:
+    //   mes = "Agosto";
+    //   break;
+    //  case 8:
+    //   mes = "Setembro";
+    //   break;
+    //  case 9:
+    //   mes = "Outubro";
+    //   break;
+    //  case 10:
+    //   mes = "Novembro";
+    //   break;
+    //  case 11:
+    //   mes = "Dezembro";
+    //   break;
+    //  }
 
      if (diaM.toString().length == 1)
          diaM = "0"+diaM;
@@ -103,6 +103,17 @@ export default (list, mutate) => {
    }
 
   const generateDays = (mes_ref) => {
+    const defaultValues = {
+      back_lunch: '',
+      entry: '',
+      out_lunch: '',
+      out: '',
+      h50: '',
+      h100: '',
+      hcan: '',
+      hsan: '',
+    };
+
     const current_date = new Date();
     const year = current_date.getFullYear();
     let [ f_month, l_month] = mes_ref;
@@ -113,11 +124,16 @@ export default (list, mutate) => {
     let f_day = formataData(day_init)
     let f_day_l_day = formataData(new Date (year, f_month+1, 0))
     const num_days = parseInt(f_day_l_day[1]) - parseInt(f_day[1]) + 20
-    days_arr.push({ day_month: f_day[1], day_week: f_day[0]})
+    days_arr.push({ day_month: f_day[1], day_week: f_day[0],month: f_day[2], ...defaultValues})
     let it = 1
     while (it <= num_days) {
         const current_day = formataData(new Date (year, f_month, 20 + it))
-        days_arr.push({ day_month: current_day[1], day_week: current_day[0]})
+        days_arr.push({
+          day_month: current_day[1],
+          day_week: current_day[0],
+          month: current_day[2],
+          ...defaultValues,
+        })
         it++
     }
 
@@ -131,18 +147,17 @@ export default (list, mutate) => {
       setLoadingSubmit(true);
 
       if (selected) {
-        const resp = await serviceApprovalFlow.update(selected.id, {
+        const resp = await serviceApprovalFlow.update(selected._id, {
           ...form,
         });
         mutate((data) => {
           const newList = data?.map((item) => {
-            if (item.id === resp.id) {
+            if (item._id === resp._id) {
               return resp;
             }
             return item;
           });
-          // return { ...data, docs: newList };
-          return newList;
+          return { ...data, docs: newList };
         });
       } else {
         let mes_ref = form.regarding?.split(',');
@@ -152,8 +167,7 @@ export default (list, mutate) => {
           days,
         });
         mutate((data) => {
-          // return { total: data.total + 1, docs: [...data?.docs, resp] };
-          return[...data, resp];
+          return { total: data.total + 1, docs: [...data?.docs, resp] };
         });
       }
       openNotificationStatus('success');
@@ -172,17 +186,17 @@ export default (list, mutate) => {
   }, [serviceApprovalFlow, mutate, selected]);
 
   const handleDelete = useCallback(
-    async (id) => {
-      // try {
-      //   await serviceApprovalFlow.destroy(id);
-      //   mutate((data) => ({
-      //     total: data.total - 1,
-      //     docs: [...data?.docs.filter((prop) => prop.id === id)],
-      //   }));
-      //   openNotificationStatus('success');
-      // } catch (e) {
-      //   openNotificationStatus('error');
-      // }
+    async (_id) => {
+      try {
+        await serviceApprovalFlow.destroy(_id);
+        mutate((data) => ({
+          total: data.total - 1,
+          docs: [...data?.docs.filter((prop) => prop._id !== _id)],
+        }));
+        openNotificationStatus('success');
+      } catch (e) {
+        openNotificationStatus('error');
+      }
     },
     [serviceApprovalFlow, mutate],
   );

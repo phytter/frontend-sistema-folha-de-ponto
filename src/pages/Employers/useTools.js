@@ -28,26 +28,24 @@ export default (list, mutate) => {
       setLoadingSubmit(true);
 
       if (selected) {
-        const resp = await serviceApprovalFlow.update(selected.id, {
+        const resp = await serviceApprovalFlow.update(selected._id, {
           ...form,
         });
         mutate((data) => {
-          const newList = data?.map((item) => {
-            if (item.id === resp.id) {
+          const newList = data?.docs?.map((item) => {
+            if (item._id === resp._id) {
               return resp;
             }
             return item;
           });
-          // return { ...data, docs: newList };
-          return newList;
+          return { ...data, docs: newList };
         });
       } else {
         const resp = await serviceApprovalFlow.store({
           ...form,
         });
         mutate((data) => {
-          // return { total: data.total + 1, docs: [...data?.docs, resp] };
-          return[...data, resp];
+          return { total: data.total + 1, docs: [...data?.docs, resp] };
         });
       }
       openNotificationStatus('success');
@@ -66,17 +64,17 @@ export default (list, mutate) => {
   }, [serviceApprovalFlow, mutate, selected]);
 
   const handleDelete = useCallback(
-    async (id) => {
-      // try {
-      //   await serviceApprovalFlow.destroy(id);
-      //   mutate((data) => ({
-      //     total: data.total - 1,
-      //     docs: [...data?.docs.filter((prop) => prop.id === id)],
-      //   }));
-      //   openNotificationStatus('success');
-      // } catch (e) {
-      //   openNotificationStatus('error');
-      // }
+    async (_id) => {
+      try {
+        await serviceApprovalFlow.destroy(_id);
+        mutate((data) => ({
+          total: data.total - 1,
+          docs: [...data?.docs.filter((prop) => prop._id !== _id)],
+        }));
+        openNotificationStatus('success');
+      } catch (e) {
+        openNotificationStatus('error');
+      }
     },
     [serviceApprovalFlow, mutate],
   );

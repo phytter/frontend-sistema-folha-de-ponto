@@ -21,7 +21,7 @@ import useTools from './useTools'
     handleTableChange,
   } = useApiPagination(`/employers`, { sorter: 'name' });
 
-  const list = data ?? [];
+  const list = data?.docs ?? [];
 
   const {
     handleDelete,
@@ -60,7 +60,7 @@ import useTools from './useTools'
           </Tooltip>
           <Popconfirm
               description={record.name}
-              onConfirm={() => handleDelete(record.id)}
+              onConfirm={() => handleDelete(record._id)}
             >
               <Button size="small" icon={<DeleteOutlined />} />
             </Popconfirm>

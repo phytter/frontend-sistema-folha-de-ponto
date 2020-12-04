@@ -23,7 +23,7 @@ export function useApiPagination(url, defaul, params) {
   } = pagination;
 
   const { data, error, mutate } = useSWR(
-    `${url}?page_size=${page_size ?? 10}&page_num=${page_num ?? 1}${
+    `${url}/getAll?limit=${page_size ?? 10}&page=${page_num ?? 1}${
       defaul?.params ? `&${defaul?.params}` : ''
     }${searchjson ? `&searchjson=${searchjson}` : ''}${
       sort ? `&sort=${sort}` : `&sort=${defaul?.sorter}`

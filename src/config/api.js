@@ -5,7 +5,7 @@ import axios from 'axios';
 //   flashWithError,
 // } from '../components/common/FlashMessages';
 
-const API_URL = 'http://localhost:3000';
+const API_URL = 'http://192.168.2.105:3003/api';
 // const cookies = new Cookies();
 
 const baseApi = axios.create({
