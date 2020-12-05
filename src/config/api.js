@@ -4,8 +4,7 @@ import axios from 'axios';
 //   flashModalWithError,
 //   flashWithError,
 // } from '../components/common/FlashMessages';
-
-const API_URL = 'http://192.168.1.114:3003/api';
+const API_URL = 'http://192.168.2.105:3003/api';
 // const cookies = new Cookies();
 
 const baseApi = axios.create({

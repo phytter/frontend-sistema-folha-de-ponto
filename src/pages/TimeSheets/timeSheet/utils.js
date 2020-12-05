@@ -25,10 +25,10 @@ const calc_noturno = (
     // debugger
     if (primeiraEntrada >= init_noturno && segundaSaida <= out_noturno) {
       // Entre o horário
-      ms_an += moment(segundaSaida,"DD/MM/YYYY HH:mm").diff(primeiraEntrada);
+      ms_an += segundaSaida.diff(primeiraEntrada);
     } else if (primeiraEntrada <= init_noturno && segundaSaida > init_noturno && segundaSaida <= out_noturno) {
       // Começa antes e termina no meio
-      ms_an += moment(segundaSaida,"DD/MM/YYYY HH:mm").diff(init_noturno);
+      ms_an += segundaSaida.diff(init_noturno);
     } else if (primeiraEntrada >= init_noturno && primeiraEntrada < out_noturno && segundaSaida > out_noturno) {
       // Começa no meio e terminar depois
       ms_an += out_noturno.diff(primeiraEntrada);
@@ -51,10 +51,10 @@ const calc_noturno = (
 
   if (segundaEntrada >= init_noturno && segundaSaida <= out_noturno) {
     // Entre o horário
-    ms_an += moment(segundaSaida,"DD/MM/YYYY HH:mm").diff(segundaEntrada);
+    ms_an += segundaSaida.diff(segundaEntrada);
   } else if (segundaEntrada <= init_noturno && segundaSaida > init_noturno && segundaSaida <= out_noturno) {
     // Começa antes e termina no meio
-    ms_an += moment(segundaSaida,"DD/MM/YYYY HH:mm").diff(init_noturno);
+    ms_an += segundaSaida.diff(init_noturno);
   } else if (segundaEntrada >= init_noturno && segundaEntrada < out_noturno && segundaSaida > out_noturno) {
     // Começa no meio e terminar depois
     ms_an += out_noturno.diff(segundaEntrada);
@@ -80,21 +80,21 @@ const calc_comercial = (
   ) => {
   const { day_month, month } = row;
 
-  let init_comercial = `${day_month}/${month}/${created_at.getFullYear()} 07:00`;
+  let init_comercial = `${day_month}/${month}/${created_at.getFullYear()} 05:00`;
   init_comercial = moment(init_comercial,"DD/MM/YYYY HH:mm");
   let out_comercial = `${day_month}/${month}/${created_at.getFullYear()} 21:00`;
   out_comercial = moment(out_comercial,"DD/MM/YYYY HH:mm");
-  // Noturnão
+
   let ms_comercial = 0;
   // se caso só tem horario de incio e fim
   if (isNaN(hh_out_lunch) && isNaN(hh_back_lunch) && !isNaN(hh_entry) && !isNaN(hh_out)) {
     // debugger
     if (primeiraEntrada >= init_comercial && segundaSaida <= out_comercial) {
       // Entre o horário
-      ms_comercial += moment(segundaSaida,"DD/MM/YYYY HH:mm").diff(primeiraEntrada);
+      ms_comercial += segundaSaida.diff(primeiraEntrada);
     } else if (primeiraEntrada <= init_comercial && segundaSaida > init_comercial && segundaSaida <= out_comercial) {
       // Começa antes e termina no meio
-      ms_comercial += moment(segundaSaida,"DD/MM/YYYY HH:mm").diff(init_comercial);
+      ms_comercial += segundaSaida.diff(init_comercial);
     } else if (primeiraEntrada >= init_comercial && primeiraEntrada < out_comercial && segundaSaida > out_comercial) {
       // Começa no meio e terminar depois
       ms_comercial += out_comercial.diff(primeiraEntrada);
@@ -114,20 +114,24 @@ const calc_comercial = (
   } else if (primeiraEntrada <= init_comercial && primeiraSaida >= out_comercial) {
     ms_comercial += out_comercial.diff(init_comercial);
   }
-
+  console.log(moment.utc(ms_comercial).format("hh:mm"), ' pt1')
   if (segundaEntrada >= init_comercial && segundaSaida <= out_comercial) {
     // Entre o horário
-    ms_comercial += moment(segundaSaida,"DD/MM/YYYY HH:mm").diff(segundaEntrada);
+    ms_comercial += segundaSaida.diff(segundaEntrada);
   } else if (segundaEntrada <= init_comercial && segundaSaida > init_comercial && segundaSaida <= out_comercial) {
     // Começa antes e termina no meio
-    ms_comercial += moment(segundaSaida,"DD/MM/YYYY HH:mm").diff(init_comercial);
+    ms_comercial += segundaSaida.diff(init_comercial);
   } else if (segundaEntrada >= init_comercial && segundaEntrada < out_comercial && segundaSaida > out_comercial) {
     // Começa no meio e terminar depois
+    console.log(moment.utc(out_comercial.diff(segundaEntrada)).format("hh:mm"), ' pt2')
+
     ms_comercial += out_comercial.diff(segundaEntrada);
   } else if (segundaEntrada <= init_comercial && segundaSaida >= out_comercial) {
     // Começa antes e termina depois
     ms_comercial += out_comercial.diff(init_comercial);
   }
+  console.log(moment.utc(ms_comercial).format("hh:mm"), ' pt3')
+
   return ms_comercial;
 }
 
@@ -147,7 +151,7 @@ const calc_horas_trabalhada = (
     const ms = segundaSaida.diff(primeiraEntrada);
     return ms;
   }
-  debugger
+  // debugger
   const ms_ft = primeiraSaida.diff(primeiraEntrada);
   const ms_lt = segundaSaida.diff(segundaEntrada);
   // console.log(moment.utc(ms_lt).format("hh:mm"), 'l time')
@@ -189,9 +193,9 @@ const calc_100 = (
     }
 
     if (segundaSaida > init_h100 && segundaEntrada < init_h100) {
-      ms_h100 += init_h100.diff(segundaSaida);
+      ms_h100 +=  segundaSaida.diff(init_h100);
     }
-
+    // console.log(ms_h100 )
     // if (hh_entry >= 13 && hh_out_lunch <= 21) {
     //   ms_h100 += primeiraSaida.diff(primeiraEntrada);
     // } else if (hh_entry <= 13 && hh_out_lunch > 13 && hh_out_lunch <= 21) {

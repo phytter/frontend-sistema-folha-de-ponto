@@ -215,15 +215,17 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
     day_month
   )
 
-  const horas_normal = moment.duration('8', 'h').asMilliseconds();
+  let horas_normal = moment.duration('8', 'h').asMilliseconds();
+  if (day_week === 6)
+    horas_normal = horas_normal - moment.duration('4', 'h').asMilliseconds()
   console.log(moment.utc(ms_comercial).format("hh:mm"), 'Horas comercial trabalhadas')
   let hsan = 0, hcan = 0, h50 = 0, h100 = ms_h100;
   if (ms_an) {
-    hsan = ms_an - ms_comercial;
+    hsan = (ms_comercial) <  ms_an ? (horas_normal - ms_comercial) : 0;
     hcan = ms_an - hsan
     console.log(moment.utc(hsan).format("hh:mm"), 'hsan')
     console.log(moment.utc(hcan).format("hh:mm"), 'hcan')
-    h50 = ms_tr - ms_comercial - ms_an - ms_h100
+    h50 = ms_tr - horas_normal - hcan - ms_h100
   } else if (ms_tr > horas_normal)
     h50 = ms_tr - horas_normal
 
