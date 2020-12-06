@@ -6,7 +6,7 @@ import axios from 'axios';
 // } from '../components/common/FlashMessages';
 import openNotificationStatus from '../pages/common/NotificationStatus';
 
-const API_URL = process.env.API_URL ?? 'http://192.168.2.105:3003/api';
+const API_URL = process.env.API_URL ?? 'https://backend-veracruz.herokuapp.com/api';
 // const cookies = new Cookies();
 
 const baseApi = axios.create({
