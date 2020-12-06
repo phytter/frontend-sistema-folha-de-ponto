@@ -195,33 +195,11 @@ const calc_100 = (
     if (segundaSaida > init_h100 && segundaEntrada < init_h100) {
       ms_h100 +=  segundaSaida.diff(init_h100);
     }
-    // console.log(ms_h100 )
-    // if (hh_entry >= 13 && hh_out_lunch <= 21) {
-    //   ms_h100 += primeiraSaida.diff(primeiraEntrada);
-    // } else if (hh_entry <= 13 && hh_out_lunch > 13 && hh_out_lunch <= 21) {
-    //   ms_h100 += primeiraSaida.diff(init_h100);
-    // } else if (hh_entry >= 13 && hh_entry < 21 && hh_out_lunch > 21) {
-    //   ms_h100 += out_100.diff(primeiraEntrada);
-    // } else if (hh_entry <= 13 && hh_out_lunch >= 21) {
-    //   ms_h100 += out_100.diff(init_h100);
-    // }
 
-    // if (hh_back_lunch >= 13 && hh_out <= 21) {
-    //   ms_h100 += segundaSaida.diff(segundaEntrada);
-    // } else if (hh_back_lunch <= 13 && hh_back_lunch > 13 && hh_out <= 21) {
-    //   ms_h100 += segundaSaida.diff(init_h100);
-    // } else if (hh_back_lunch >= 13 && hh_back_lunch < 21 && hh_out > 21) {
-    //   ms_h100 += out_100.diff(segundaEntrada);
-    // } else if (hh_back_lunch <= 13 && hh_out >= 21) {
-    //   ms_h100 += out_100.diff(init_h100);
-    // }
     console.log(moment.utc(ms_h100).format("hh:mm"), 'Horas 100%')
     return ms_h100;
   }
 
-  // if (day_week === 0) {
-
-  // }
   return 0;
 };
 

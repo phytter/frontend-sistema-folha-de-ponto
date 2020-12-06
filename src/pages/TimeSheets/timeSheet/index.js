@@ -1,22 +1,45 @@
 
-import React, { useRef, useContext, useState, useEffect, useMemo } from 'react';
-import { Button, Input, Form, Table, Space, Modal, Tooltip } from 'antd';
-import { Container } from './styles'
+import React, { useRef, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import { Button, Input, Form, Table, Row, Col } from 'antd';
+import { Container, WrapperValues, Label, Hours } from './styles'
 import { Header, Title, Popconfirm,GoBack } from '../../common/components';
 import InputMask from "react-input-mask";
 import { baseApi as api} from '../../../config/api';
-import { ReadOutlined } from '@ant-design/icons';
-import simpleTableTools from '../../common/simpleTableTools';
-import { useApiPagination } from '../../../hooks/useApi';
 import moment from 'moment';
-import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
+import { WarningOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from './utils';
-// import useTools from './useTools'
+import openNotificationStatus from '../../common/NotificationStatus';
+
 
  const TimeSheets = (props) => {
   const [dataSource, setDataSource] = useState({});
+  const [stateSave, setStateSave] = useState('save');
   const EditableContext = React.createContext();
-  const { id_time_sheet } = props.match.params
+  const { id_time_sheet, id_employer } = props.match.params
+
+  const soma = (days) => {
+    let h50 = 0, h100=0, hsan = 0, hcan = 0;
+    days?.forEach(day => {
+      if (day.h50)
+      h50+= parseInt(day.h50);
+      if (day.h100)
+      h100 += parseInt(day.h100);
+      if (day.hsan)
+      hsan += parseInt(day.hsan);
+      if (day.hcan)
+      hcan += parseInt(day.hcan);
+    });
+    return { h50, hcan, h100, hsan };
+  }
+
+  const horas_calculadas = useMemo(()=> soma(dataSource?.days), [dataSource?.days])
+
+  const showTime = useCallback((text) => {
+    if (!text) return null;
+    let d = moment.duration(text);
+    const time = Math.floor(d.asHours()) + moment.utc(text).format(":mm")
+    return time;
+  }, []);
 
   useEffect(()=>{
     (async () => {
@@ -24,6 +47,18 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
       setDataSource(resp.data)
     })()
   }, [])
+
+  const save = async (data) => {
+    try {
+      setStateSave('saving')
+      const resp = await api.put(`/time-sheets/${id_time_sheet}`, data);
+      setStateSave('save')
+    } catch (e) {
+      setStateSave('error')
+      openNotificationStatus('error', null, 'Save automático falhou, clique em salvar para manter suas alterações', { duration: 5 })
+      console.log('Errror ', e)
+    }
+  }
 
   const EditableRow = ({ index, ...props }) => {
     const [form] = Form.useForm();
@@ -35,8 +70,6 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
       </Form>
     );
   };
-
-  const TIME_MASK = [/^([0-2])/, /([0-9])/, ":", /[0-5]/, /[0-9]/]
 
   const EditableCell = ({
     title,
@@ -53,7 +86,7 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
 
     useEffect(() => {
       if (editing) {
-        // inputRef.current.focus();
+        inputRef.current.focus();
       }
     }, [editing]);
 
@@ -87,10 +120,8 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
             },
           ]}
         >
-          {/* <Input ref={inputRef} onPressEnter={save} onBlur={save} /> */}
-          {/* <InputMask ref={inputRef} mask={TIME_MASK} onPressEnter={save} onBlur={save}  /> */}
-          <InputMask mask="99:99" onPressEnter={save} onBlur={save}>
-            {(inputProps) => <Input {...inputProps} ref={inputRef}  />}
+          <InputMask mask="99:99" onPressEnter={save} onBlur={save} >
+            {(inputProps) => <Input {...inputProps}   ref={inputRef}/>}
           </InputMask>
         </Form.Item>
       ) : (
@@ -115,8 +146,8 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
   const { back_lunch, day_month, day_week, entry, out_lunch, out, month } = row;
   let ms_h100 = 0;
   let ms_an = 0;
-  let ms_ft = 0;
   let flag_next_day = false
+  let hsan = 0, hcan = 0, h50 = 0;
 
   // Horario da primeira parte
     let [hh_out_lunch,mm_out_lunch] = out_lunch.split(':');
@@ -159,8 +190,8 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
     hh_out,
   );
   // Math.floor(d.asHours()) + moment.utc(ms_ft).format(":mm")
-  const d_htrabalhadas = moment.duration(ms_tr)
-  console.log( Math.floor(d_htrabalhadas.asHours()) + moment.utc(ms_tr).format(":mm"), 'Horas trabalhadas');
+  // const d_htrabalhadas = moment.duration(ms_tr)
+  // console.log( Math.floor(d_htrabalhadas.asHours()) + moment.utc(ms_tr).format(":mm"), 'Horas trabalhadas');
 
   ms_an = calc_noturno(
     primeiraEntrada,
@@ -188,16 +219,7 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
     row
   );
 
-  console.log(moment.utc(ms_an).format("hh:mm"), 'noturno');
-  // console.log(init_noturno > out_noturno);
-  // Extra 50%
-  // if (day_week < 5) {
-  //   const init_h50 = `${day_month}/${month}/${created_at.getFullYear()} 17:00`
-  //   const out_h50 = `${day_month}/${month}/${created_at.getFullYear()} 21:00`
-  //   let ms_h50 = moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(hh_entry < 17 ? init_h50 : primeiraEntrada ,"DD/MM/YYYY HH:mm"));
-  //   ms_h50 += moment(hh_out > 21 ? out_h50 : segundaSaida,"DD/MM/YYYY HH:mm").diff(moment(segundaEntrada,"DD/MM/YYYY HH:mm"));
-  //   console.log(moment.utc(ms_h50).format("hh:mm"))
-  // }
+  // console.log(moment.utc(ms_an).format("hh:mm"), 'noturno');
 
   // Horário 100%
   ms_h100 = calc_100(
@@ -218,30 +240,31 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
   let horas_normal = moment.duration('8', 'h').asMilliseconds();
   if (day_week === 6)
     horas_normal = horas_normal - moment.duration('4', 'h').asMilliseconds()
-  console.log(moment.utc(ms_comercial).format("hh:mm"), 'Horas comercial trabalhadas')
-  let hsan = 0, hcan = 0, h50 = 0, h100 = ms_h100;
+  // console.log(moment.utc(ms_comercial).format("hh:mm"), 'Horas comercial trabalhadas')
+
   if (ms_an) {
     hsan = (ms_comercial) <  ms_an ? (horas_normal - ms_comercial) : 0;
     hcan = ms_an - hsan
-    console.log(moment.utc(hsan).format("hh:mm"), 'hsan')
-    console.log(moment.utc(hcan).format("hh:mm"), 'hcan')
+    // console.log(moment.utc(hsan).format("hh:mm"), 'hsan')
+    // console.log(moment.utc(hcan).format("hh:mm"), 'hcan')
     h50 = ms_tr - horas_normal - hcan - ms_h100
-  } else if (ms_tr > horas_normal)
+  } else if ( day_week !== 0)
     h50 = ms_tr - horas_normal
-
-  console.log(moment.utc(h50).format("hh:mm"), 'h50')
+  // console.log(day_week)
+  // console.log(moment.utc(h50).format("hh:mm"), 'h50')
 
   if(day_week === 0) {
-    h100 = ms_comercial;
+    ms_h100 = ms_comercial;
   }
 
   newData.splice(index, 1, {
     ...item,
     ...row,
-    ...{hsan, hcan, h100, h50},
+    ...{hsan, hcan, h100: ms_h100, h50},
   });
   // debugger
   setDataSource(prev => ({...prev, days: newData}));
+  save({ days: newData });
   // ms_ft = moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(primeiraPartida,"DD/MM/YYYY HH:mm"));
   // let d = moment.duration(ms_ft);
   // first_time = Math.floor(d.asHours()) + moment.utc(ms_ft).format(":mm")
@@ -376,17 +399,56 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
   }, [collumns]);
 
   return <Container>
-    <GoBack onClick={() => props.history.push(`/folhas-de-ponto/3/list`)}/>
+    <GoBack onClick={() => props.history.push(`/folhas-de-ponto/${id_employer}/list`)}/>
     <Header>
       <Title>Folha de ponto</Title>
+      <Button
+        loading={stateSave === 'saving'}
+        type={stateSave === 'error' ? 'primary' : 'success'}
+        onClick={() => save(dataSource)}
+        icon={stateSave === 'error' ? <WarningOutlined /> : (stateSave === 'save' && <CheckCircleOutlined />)}
+      >
+        Salvar
+      </Button>
     </Header>
+
+    <WrapperValues>
+      <Row type='flex' justify='center' gutter={30} align='middle'>
+        <Col>
+          <Hours>
+            <Label>50%: </Label>
+            {showTime(horas_calculadas?.h50)}
+          </Hours>
+        </Col>
+        <Col>
+          <Hours>
+            <Label>100%: </Label>
+            {showTime(horas_calculadas?.h100)}
+          </Hours>
+        </Col>
+        <Col>
+          <Hours>
+            <Label>HSAN: </Label>
+            {showTime(horas_calculadas?.hsan)}
+          </Hours>
+        </Col>
+        <Col>
+          <Hours>
+            <Label>HCAN: </Label>
+            {showTime(horas_calculadas?.hcan)}
+          </Hours>
+        </Col>
+      </Row>
+    </WrapperValues>
 
     <Table
       components={components}
       rowClassName={() => 'editable-row'}
       bordered
+      loading={!dataSource.days}
       dataSource={dataSource.days}
       columns={columns}
+      pagination={{showSizeChanger: true,}}
       rowKey='id'
     />
 

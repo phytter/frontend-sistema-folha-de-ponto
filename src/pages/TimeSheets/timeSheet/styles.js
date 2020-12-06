@@ -23,3 +23,21 @@ export const Container = styled.div`
     border: 1px solid #434343;
   }
 `;
+
+export const WrapperValues = styled.div`
+  padding: 20px;
+  width: 90%;
+  background-color: #EEEEEE;
+  margin: 20px auto
+`;
+
+export const Label = styled.span`
+  font-weight: bold;
+  margin-right: 10px;
+  font-size: 18px;
+`;
+
+export const Hours = styled.div`
+  display: flex;
+  align-items: baseline;
+`;
