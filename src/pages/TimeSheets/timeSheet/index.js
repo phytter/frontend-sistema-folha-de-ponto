@@ -15,6 +15,7 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
 
  const TimeSheets = (props) => {
   const [dataSource, setDataSource] = useState({});
+  const [stateSave, setStateSave] = useState('save');
   const EditableContext = React.createContext();
   const { id_time_sheet, id_employer } = props.match.params
 
@@ -27,8 +28,11 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
 
   const save = async (data) => {
     try {
+      setStateSave('saving')
       const resp = await api.put(`/time-sheets/${id_time_sheet}`, data);
+      setStateSave('save')
     } catch (e) {
+      setStateSave('error')
       console.log('Errror ', e)
     }
   }
@@ -380,12 +384,20 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
     <GoBack onClick={() => props.history.push(`/folhas-de-ponto/${id_employer}/list`)}/>
     <Header>
       <Title>Folha de ponto</Title>
+      <Button
+        loading={stateSave === 'saving'}
+        type={stateSave === 'error' ? 'primary' : 'default'}
+        onClick={() => save(dataSource)}
+      >
+        Salvar
+      </Button>
     </Header>
 
     <Table
       components={components}
       rowClassName={() => 'editable-row'}
       bordered
+      loading={!dataSource.days}
       dataSource={dataSource.days}
       columns={columns}
       pagination={{showSizeChanger: true,}}
