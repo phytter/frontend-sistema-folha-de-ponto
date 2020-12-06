@@ -36,7 +36,7 @@ import { Link } from 'react-router-dom';
       render: (text, record) => (
         <Space size="middle">
           <Tooltip title='Ver folhas de ponto'>
-            <Link to={`/folhas-de-ponto/${record.id}/list`}>
+            <Link to={`/folhas-de-ponto/${record._id}/list`}>
               <Button
                 // onClick={() => [setSelected(record), setVisibleForm(true)]}
                 size="small"

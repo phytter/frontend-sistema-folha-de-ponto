@@ -16,7 +16,7 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
  const TimeSheets = (props) => {
   const [dataSource, setDataSource] = useState({});
   const EditableContext = React.createContext();
-  const { id_time_sheet } = props.match.params
+  const { id_time_sheet, id_employer } = props.match.params
 
   useEffect(()=>{
     (async () => {
@@ -24,6 +24,14 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
       setDataSource(resp.data)
     })()
   }, [])
+
+  const save = async (data) => {
+    try {
+      const resp = await api.put(`/time-sheets/${id_time_sheet}`, data);
+    } catch (e) {
+      console.log('Errror ', e)
+    }
+  }
 
   const EditableRow = ({ index, ...props }) => {
     const [form] = Form.useForm();
@@ -117,6 +125,7 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
   let ms_an = 0;
   let ms_ft = 0;
   let flag_next_day = false
+  let hsan = 0, hcan = 0, h50 = 0;
 
   // Horario da primeira parte
     let [hh_out_lunch,mm_out_lunch] = out_lunch.split(':');
@@ -189,15 +198,6 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
   );
 
   console.log(moment.utc(ms_an).format("hh:mm"), 'noturno');
-  // console.log(init_noturno > out_noturno);
-  // Extra 50%
-  // if (day_week < 5) {
-  //   const init_h50 = `${day_month}/${month}/${created_at.getFullYear()} 17:00`
-  //   const out_h50 = `${day_month}/${month}/${created_at.getFullYear()} 21:00`
-  //   let ms_h50 = moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(hh_entry < 17 ? init_h50 : primeiraEntrada ,"DD/MM/YYYY HH:mm"));
-  //   ms_h50 += moment(hh_out > 21 ? out_h50 : segundaSaida,"DD/MM/YYYY HH:mm").diff(moment(segundaEntrada,"DD/MM/YYYY HH:mm"));
-  //   console.log(moment.utc(ms_h50).format("hh:mm"))
-  // }
 
   // Horário 100%
   ms_h100 = calc_100(
@@ -219,29 +219,30 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
   if (day_week === 6)
     horas_normal = horas_normal - moment.duration('4', 'h').asMilliseconds()
   console.log(moment.utc(ms_comercial).format("hh:mm"), 'Horas comercial trabalhadas')
-  let hsan = 0, hcan = 0, h50 = 0, h100 = ms_h100;
+
   if (ms_an) {
     hsan = (ms_comercial) <  ms_an ? (horas_normal - ms_comercial) : 0;
     hcan = ms_an - hsan
     console.log(moment.utc(hsan).format("hh:mm"), 'hsan')
     console.log(moment.utc(hcan).format("hh:mm"), 'hcan')
     h50 = ms_tr - horas_normal - hcan - ms_h100
-  } else if (ms_tr > horas_normal)
+  } else if ( day_week !== 0)
     h50 = ms_tr - horas_normal
-
+  console.log(h50)
   console.log(moment.utc(h50).format("hh:mm"), 'h50')
 
   if(day_week === 0) {
-    h100 = ms_comercial;
+    ms_h100 = ms_comercial;
   }
 
   newData.splice(index, 1, {
     ...item,
     ...row,
-    ...{hsan, hcan, h100, h50},
+    ...{hsan, hcan, ms_h100, h50},
   });
   // debugger
   setDataSource(prev => ({...prev, days: newData}));
+  save({ days: newData });
   // ms_ft = moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(primeiraPartida,"DD/MM/YYYY HH:mm"));
   // let d = moment.duration(ms_ft);
   // first_time = Math.floor(d.asHours()) + moment.utc(ms_ft).format(":mm")
@@ -376,7 +377,7 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
   }, [collumns]);
 
   return <Container>
-    <GoBack onClick={() => props.history.push(`/folhas-de-ponto/3/list`)}/>
+    <GoBack onClick={() => props.history.push(`/folhas-de-ponto/${id_employer}/list`)}/>
     <Header>
       <Title>Folha de ponto</Title>
     </Header>
@@ -387,6 +388,7 @@ import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from '.
       bordered
       dataSource={dataSource.days}
       columns={columns}
+      pagination={{showSizeChanger: true,}}
       rowKey='id'
     />
 

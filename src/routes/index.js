@@ -11,8 +11,8 @@ const Routes = () => (
   <Switch>
     <Route exact path="/funcionarios" component={Employers} />
     <Route exact path="/folhas-de-ponto" component={TimeSheets} />
-    <Route exact path="/folhas-de-ponto/:id_user/list" component={TimeSheetsList} />
-    <Route exact path="/folhas-de-ponto/:id_user/list/:id_time_sheet/edit" component={TimeSheet} />
+    <Route exact path="/folhas-de-ponto/:id_employer/list" component={TimeSheetsList} />
+    <Route exact path="/folhas-de-ponto/:id_employer/list/:id_time_sheet/edit" component={TimeSheet} />
     <Route path="*" component={TimeSheets} />
   </Switch>
 )

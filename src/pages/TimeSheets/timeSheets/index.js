@@ -1,18 +1,19 @@
 
 import { useRef } from 'react';
 import { Button, Input, Form } from 'antd';
-// import { Container } from './styles'
 import { Header, Title, Container, Popconfirm, GoBack } from '../../common/components';
 import { Table, Space, Modal, Tooltip, Select } from 'antd';
-import { ReadOutlined } from '@ant-design/icons';
-import simpleTableTools from '../../common/simpleTableTools';
+import { simpleTableSorter } from '../../common/simpleTableTools';
 import { useApiPagination } from '../../../hooks/useApi';
 import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
+import moment from 'moment';
 import useTools from './useTools'
 import { Link } from 'react-router-dom';
 
  const TimeSheets = (props) => {
    const search = useRef();
+
+   const { id_employer } = props.match.params;
 
    const {
     data,
@@ -20,7 +21,7 @@ import { Link } from 'react-router-dom';
     isLoading,
     pagination,
     handleTableChange,
-  } = useApiPagination(`/time-sheets`, { sorter: 'name' });
+  } = useApiPagination(`/time-sheets`, { sorter: 'createdAt' }, `id_employer=${id_employer}`);
 
   const list = data?.docs ?? [];
 
@@ -35,7 +36,7 @@ import { Link } from 'react-router-dom';
     loadingSubmit,
     form,
     changeForm
-  } = useTools(list, mutate);
+  } = useTools(list, mutate, id_employer);
 
   const { sort, filter } = pagination;
 
@@ -44,13 +45,16 @@ import { Link } from 'react-router-dom';
       title: 'Criado',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      ...simpleTableTools('name', search, { sort, filter }),
+      ...simpleTableSorter('createdAt', sort),
+      render: (txt) => {
+        return moment(txt).format("DD/MM/YYYY HH:mm")
+      }
     },
     {
       title: 'Referente á',
       dataIndex: 'regarding',
       key: 'regarding',
-      ...simpleTableTools('regarding', search, { sort, filter }),
+      ...simpleTableSorter('regarding', sort),
       render: (text) => {
         switch (text) {
           case '0,1':
@@ -89,7 +93,7 @@ import { Link } from 'react-router-dom';
       render: (text, record) => (
         <Space size="middle">
           <Tooltip title='Editar'>
-            <Link to={`/folhas-de-ponto/1/list/${record._id}/edit`}>
+            <Link to={`/folhas-de-ponto/${id_employer}/list/${record._id}/edit`}>
               <Button
                 // onClick={() => [setSelected(record), setVisibleForm(true)]}
                 size="small"

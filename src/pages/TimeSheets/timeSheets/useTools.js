@@ -1,14 +1,16 @@
 import { useEffect, useState, useCallback } from 'react';
 import Bread from '../../common/bread';
 import openNotificationStatus from '../../common/NotificationStatus';
+import { useLocation } from 'react-router-dom';
 
-export default (list, mutate) => {
+export default (list, mutate, id_employer) => {
   const [visibleForm, setVisibleForm] = useState(false);
   const [form, setForm] = useState(false);
   const [selected, setSelected] = useState(null);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [errors, setErrors] = useState(false);
   const serviceApprovalFlow = new Bread('time-sheets');
+  const location = useLocation();
 
   useEffect(() => {
     if (selected && visibleForm) {
@@ -166,6 +168,7 @@ export default (list, mutate) => {
         const resp = await serviceApprovalFlow.store({
           ...form,
           days,
+          id_employer,
         });
         mutate((data) => {
           return { total: data.total + 1, docs: [...data?.docs, resp] };
