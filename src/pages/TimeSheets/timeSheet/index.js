@@ -408,7 +408,7 @@ import openNotificationStatus from '../../common/NotificationStatus';
         onClick={() => save(dataSource)}
         icon={stateSave === 'error' ? <WarningOutlined /> : (stateSave === 'save' && <CheckCircleOutlined />)}
       >
-        Salvar
+        {stateSave === 'error' ? 'Salvar' : 'Salvo'}
       </Button>
     </Header>
 

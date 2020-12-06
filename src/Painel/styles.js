@@ -14,11 +14,23 @@ export const Sider = styled(Layout.Sider)`
 `;
 
 export const Header = styled(Layout.Header)`
-  background: #74604D;
+  background: #9D846C;
   height: 50px;
   position: fixed;
   width: 100vw;
   z-index: 1;
+  h1{
+    font-family: 'Enriqueta', arial, serif; line-height: 1.25; margin: 0 0 10px; font-size: 35px; font-weight: bold;
+    margin-bottom: 0px;
+    color: #3D3329;
+  }
+  .last {
+    margin-left: 7px;
+    color: #181410;
+  }
+  -webkit-box-shadow: 0px 2px 3px 0px rgba(0,0,0,0.56);
+  -moz-box-shadow: 0px 2px 3px 0px rgba(0,0,0,0.56);
+  box-shadow: 0px 2px 3px 0px rgba(0,0,0,0.56);
 `;
 
 
