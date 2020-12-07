@@ -21,7 +21,7 @@ import { Link } from 'react-router-dom';
     isLoading,
     pagination,
     handleTableChange,
-  } = useApiPagination(`/time-sheets`, { sorter: 'createdAt' }, `id_employer=${id_employer}`);
+  } = useApiPagination(`/time-sheets`, { sorter: '-createdAt' }, `id_employer=${id_employer}`);
 
   const list = data?.docs ?? [];
 

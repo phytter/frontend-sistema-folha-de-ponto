@@ -1,5 +1,16 @@
 import moment from 'moment';
 
+const handleDate = (day_month, month, year, hh_out_lunch, mm_out_lunch) => (cond) => {
+  let date = null;
+  if (cond) {
+    let converted_day = parseInt(day_month) + 1;
+    if (converted_day.toString().length == 1)
+      converted_day = "0"+ converted_day
+    date = new Date(year, month - 1, parseInt(converted_day), hh_out_lunch, mm_out_lunch)
+  } else date = new Date(year, month - 1, day_month, hh_out_lunch, mm_out_lunch)
+  return moment(date)
+}
+
 const calc_noturno = (
   primeiraEntrada,
   primeiraSaida,
@@ -12,16 +23,17 @@ const calc_noturno = (
   created_at,
   row
   ) => {
-  let { day_month, month } = row;
+  let { day_month, month, year } = row;
 
   month = parseInt(month) + 1;
   if (month.toString().length == 1)
     month = "0"+month;
 
-  let init_noturno = `${day_month}/${month}/${created_at.getFullYear()} 21:00`;
+  let init_noturno = `${day_month}/${month}/${year} 21:00`;
   init_noturno = moment(init_noturno,"DD/MM/YYYY HH:mm");
-  let out_noturno = `${day_month+1}/${month}/${created_at.getFullYear()} 05:00`;
-  out_noturno = moment(out_noturno,"DD/MM/YYYY HH:mm");
+  let out_noturno = `${day_month}/${month}/${year} 05:00`;
+  out_noturno = handleDate(day_month, month, year, 5, 0)(true)
+  //  moment(out_noturno,"DD/MM/YYYY HH:mm").add(1, 'd');
   // Noturnão
   let ms_an = 0;
   // se caso só tem horario de incio e fim
@@ -82,15 +94,15 @@ const calc_comercial = (
   created_at,
   row
   ) => {
-  let { day_month, month } = row;
+  let { day_month, month, year } = row;
 
   month = parseInt(month) + 1;
   if (month.toString().length == 1)
     month = "0"+month;
 
-  let init_comercial = `${day_month}/${month}/${created_at.getFullYear()} 05:00`;
+  let init_comercial = `${day_month}/${month}/${year} 05:00`;
   init_comercial = moment(init_comercial,"DD/MM/YYYY HH:mm");
-  let out_comercial = `${day_month}/${month}/${created_at.getFullYear()} 21:00`;
+  let out_comercial = `${day_month}/${month}/${year} 21:00`;
   out_comercial = moment(out_comercial,"DD/MM/YYYY HH:mm");
 
   let ms_comercial = 0;
@@ -153,20 +165,26 @@ const calc_horas_trabalhada = (
   hh_entry,
   hh_out,
 ) => {
+  // Se não tiver horário retornar 0
+  if (isNaN(hh_out_lunch) && isNaN(hh_back_lunch) && isNaN(hh_entry) && isNaN(hh_out))
+  return 0;
+
   // se caso só tem horario de incio e fim
-  // debugger
   if (isNaN(hh_out_lunch) && isNaN(hh_back_lunch) && !isNaN(hh_entry) && !isNaN(hh_out)) {
-    debugger
+    // debugger
     const ms = segundaSaida.diff(primeiraEntrada);
     return ms;
   }
-  const ms_ft = primeiraSaida.diff(primeiraEntrada);
-  const ms_lt = segundaSaida.diff(segundaEntrada);
-  // console.log(moment.utc(ms_lt).format("hh:mm"), 'l time')
-  // console.log(moment.utc(ms_ft).format("hh:mm"), 'f time')
-  // const supposed = moment.duration(ms_ft).add(moment.duration(ms_lt)).asHours();
-  // console.log(moment.utc(ms_ft + ms_lt).format("hh:mm"), 'f time', supposed)
-  return ms_ft + ms_lt;
+  try {
+    const ms_ft = primeiraSaida.diff(primeiraEntrada);
+    const ms_lt = segundaSaida.diff(segundaEntrada);
+    // console.log(moment.utc(ms_ft).format("hh:mm"), 'f time')
+    // const supposed = moment.duration(ms_ft).add(moment.duration(ms_lt)).asHours();
+    // console.log(moment.utc(ms_ft + ms_lt).format("hh:mm"), 'f time', supposed)
+    return ms_ft + ms_lt;
+  } catch (e) {
+    return 0;
+  }
   // const first_time = Math.floor(d.asHours()) + moment.utc(ms_ft).format(":mm")
 }
 
@@ -186,24 +204,21 @@ const calc_100 = (
   feriados,
   year
 ) => {
-  // 100% no sabádo
+  // 100% no domingos e feriados
 
   let converted_day = parseInt(day_month) + 1;
   if (converted_day.toString().length == 1)
     converted_day = "0"+ converted_day
 
-  const new_date = new Date (year, month - 1, parseInt(converted_day))
-  // console.log(moment(new_date).format('DD/MM/YYYY'), month)
-  // const tomorrow = new Date (year, month - 1, parseInt(converted_day), 5)
+  const new_date = new Date (year, month - 1, parseInt(converted_day));
+
   if (day_week === 6 || feriados.includes(moment(new_date).format('DD/MM/YYYY'))) {
-    let init_h100 = `${day_month + 1}/${month}/${created_at.getFullYear()} 05:00`
-      init_h100 = moment(new Date(year, month - 1, parseInt(converted_day), 5)).format("DD/MM/YYYY HH:mm");
+    let init_h100 = handleDate(day_month, month, year, 5, 0)(true)
 
-    let out_100 = `${day_month + 1}/${month}/${created_at.getFullYear()} 21:00`
-      out_100 = moment(new Date(year, month - 1, parseInt(converted_day), 21)).format("DD/MM/YYYY HH:mm");
+    let out_100 = handleDate(day_month, month, year, 21, 0)(true)
+      //  moment(new Date(year, month - 1, parseInt(converted_day), 21));
 
-    // debugger
-    if (isNaN(hh_out_lunch) && isNaN(hh_back_lunch) && !isNaN(hh_entry) && !isNaN(hh_out) && segundaSaida > out_100) {
+    if (isNaN(hh_out_lunch) && isNaN(hh_back_lunch) && !isNaN(hh_entry) && !isNaN(hh_out) && segundaSaida > init_h100) {
       const ms = segundaSaida.diff(init_h100);
       return ms;
     }

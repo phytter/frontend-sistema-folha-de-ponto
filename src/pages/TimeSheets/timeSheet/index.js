@@ -44,10 +44,6 @@ import openNotificationStatus from '../../common/NotificationStatus';
   }, []);
 
   useEffect(()=>{
-    console.log(feriados)
-  }, [feriados]);
-
-  useEffect(()=>{
     (async () => {
       const resp_time = await api.get(`/time-sheets/${id_time_sheet}`)
       setDataSource(resp_time.data)
@@ -153,6 +149,17 @@ import openNotificationStatus from '../../common/NotificationStatus';
     return <td {...restProps}>{childNode}</td>;
   };
 
+  const handleDate = (day_month, month, year, hh_out_lunch, mm_out_lunch) => (cond) => {
+    let date = null;
+    if (cond) {
+      let converted_day = parseInt(day_month) + 1;
+      if (converted_day.toString().length == 1)
+        converted_day = "0"+ converted_day
+      date = new Date(year, month - 1, parseInt(converted_day), hh_out_lunch, mm_out_lunch)
+    } else date = new Date(year, month - 1, day_month, hh_out_lunch, mm_out_lunch)
+    return moment(date)
+  }
+
   const handleSave = row => {
     const newData = [...dataSource.days];
     const index = newData.findIndex(item => row.id === item.id);
@@ -181,10 +188,11 @@ import openNotificationStatus from '../../common/NotificationStatus';
     if (hh_out_lunch < hh_entry) flag_next_day = true;
 
   // ponto da primeira parte
-    let primeiraSaida = `${hh_out_lunch < hh_entry ? day_month + 1 : day_month}/${month}/${created_at.getFullYear()} ${hh_out_lunch}:${mm_out_lunch}`
-    let primeiraEntrada = `${day_month}/${month}/${created_at.getFullYear()} ${hh_entry}:${mm_entry}`
-    primeiraSaida = moment(primeiraSaida,"DD/MM/YYYY HH:mm")
+    // let primeiraSaida = `${day_month}/${month}/${year} ${hh_out_lunch}:${mm_out_lunch}`
+    let primeiraEntrada = `${day_month}/${month}/${year} ${hh_entry}:${mm_entry}`
     primeiraEntrada = moment(primeiraEntrada,"DD/MM/YYYY HH:mm")
+
+    let primeiraSaida = handleDate(day_month, month, year, hh_out_lunch, mm_out_lunch)(hh_out_lunch < hh_entry);
 
   // Horário da segunda parte
     let [hh_out,mm_out] = out.split(':');
@@ -192,16 +200,9 @@ import openNotificationStatus from '../../common/NotificationStatus';
     let [hh_back_lunch, mm_back_lunch] = back_lunch.split(':');
     hh_back_lunch = parseInt(hh_back_lunch); mm_back_lunch = parseInt(mm_back_lunch);
 
-  // Ponto da segunda parte
-    let segundaEntrada = `${hh_back_lunch < hh_out_lunch || flag_next_day ?
-      day_month + 1 : day_month
-    }/${month}/${created_at.getFullYear()} ${hh_back_lunch}:${mm_back_lunch}`
+    const segundaEntrada = handleDate(day_month, month, year, hh_back_lunch, mm_back_lunch)(hh_back_lunch < hh_out_lunch || flag_next_day );
 
-    let segundaSaida = `${hh_out < hh_entry || hh_out < hh_back_lunch ? // hh_out < hh_back_lunch || hh_out < hh_out_lunch || flag_next_day ||
-                            day_month + 1 : day_month
-                          }/${month}/${created_at.getFullYear()} ${hh_out}:${mm_out}`
-    segundaSaida = moment(segundaSaida,"DD/MM/YYYY HH:mm")
-    segundaEntrada = moment(segundaEntrada,"DD/MM/YYYY HH:mm")
+    const segundaSaida = handleDate(day_month, month, year, hh_out, mm_out)(hh_out < hh_entry || hh_out < hh_back_lunch);
 
   const ms_tr = calc_horas_trabalhada(
     primeiraEntrada,
@@ -272,7 +273,7 @@ import openNotificationStatus from '../../common/NotificationStatus';
   let horas_normal = moment.duration('8', 'h').asMilliseconds();
   if (day_week === 6)
     horas_normal = horas_normal - moment.duration('4', 'h').asMilliseconds()
-  // console.log(moment.utc(ms_comercial).format("hh:mm"), 'Horas comercial trabalhadas')
+  console.log(moment.utc(ms_comercial).format("hh:mm"), 'Horas comercial trabalhadas')
 
   if (ms_an) {
     hsan = (ms_comercial) <  ms_an ? (horas_normal - ms_comercial) : 0;
@@ -289,7 +290,7 @@ import openNotificationStatus from '../../common/NotificationStatus';
     ms_h100 += ms_comercial;
   }
 
-  console.log(date_today, row)
+  // console.log(date_today, row)
   newData.splice(index, 1, {
     ...item,
     ...row,
