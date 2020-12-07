@@ -244,7 +244,7 @@ import openNotificationStatus from '../../common/NotificationStatus';
     row
   );
 
-  // console.log(moment.utc(ms_an).format("hh:mm"), 'noturno');
+  console.log(moment.utc(ms_an).format("hh:mm"), 'noturno');
 
   // Horário 100%
   ms_h100 = calc_100(
@@ -276,7 +276,7 @@ import openNotificationStatus from '../../common/NotificationStatus';
   console.log(moment.utc(ms_comercial).format("hh:mm"), 'Horas comercial trabalhadas')
 
   if (ms_an) {
-    hsan = (ms_comercial) <  ms_an ? (horas_normal - ms_comercial) : 0;
+    hsan = (ms_comercial) <  ms_an ? (horas_normal - ms_comercial) > ms_an ? ms_an : (horas_normal - ms_comercial) : 0;
     hcan = ms_an - hsan
     // console.log(moment.utc(hsan).format("hh:mm"), 'hsan')
     // console.log(moment.utc(hcan).format("hh:mm"), 'hcan')

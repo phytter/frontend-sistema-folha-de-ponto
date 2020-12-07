@@ -37,6 +37,7 @@ const calc_noturno = (
   // Noturnão
   let ms_an = 0;
   // se caso só tem horario de incio e fim
+  // debugger
   if (isNaN(hh_out_lunch) && isNaN(hh_back_lunch) && !isNaN(hh_entry) && !isNaN(hh_out)) {
     // debugger
     if (primeiraEntrada >= init_noturno && segundaSaida <= out_noturno) {
