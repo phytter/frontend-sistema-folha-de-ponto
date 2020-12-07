@@ -176,8 +176,11 @@ const calc_horas_trabalhada = (
     return ms;
   }
   try {
-    const ms_ft = primeiraSaida.diff(primeiraEntrada);
-    const ms_lt = segundaSaida.diff(segundaEntrada);
+    let ms_ft = 0, ms_lt = 0;
+    if (!isNaN(hh_entry) && !isNaN(hh_out_lunch))
+      ms_ft = primeiraSaida.diff(primeiraEntrada);
+    if (!isNaN(hh_back_lunch) && !isNaN(hh_out))
+      ms_lt = segundaSaida.diff(segundaEntrada);
     // console.log(moment.utc(ms_ft).format("hh:mm"), 'f time')
     // const supposed = moment.duration(ms_ft).add(moment.duration(ms_lt)).asHours();
     // console.log(moment.utc(ms_ft + ms_lt).format("hh:mm"), 'f time', supposed)
