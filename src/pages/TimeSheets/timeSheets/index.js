@@ -3,7 +3,7 @@ import { useRef } from 'react';
 import { Button, Input, Form } from 'antd';
 import { Header, Title, Container, Popconfirm, GoBack } from '../../common/components';
 import { Table, Space, Modal, Tooltip, Select } from 'antd';
-import { simpleTableSorter } from '../../common/simpleTableTools';
+import simpleTableTools ,{ simpleTableSorter } from '../../common/simpleTableTools';
 import { useApiPagination } from '../../../hooks/useApi';
 import { SaveOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import moment from 'moment';
@@ -49,6 +49,16 @@ import { Link } from 'react-router-dom';
       render: (txt) => {
         return moment(txt).format("DD/MM/YYYY HH:mm")
       }
+    },
+    {
+      title: 'Ano',
+      dataIndex: 'year',
+      key: 'year',
+      // ...simpleTableSorter('year', sort),
+      ...simpleTableTools('year', search, { sort, filter }),
+      // render: (txt) => {
+      //   return moment(txt).format("DD/MM/YYYY HH:mm")
+      // }
     },
     {
       title: 'Referente á',
