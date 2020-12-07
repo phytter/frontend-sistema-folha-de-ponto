@@ -114,16 +114,25 @@ import { Link } from 'react-router-dom';
   // const form = {}
   const Option = Select.Option;
 
+  const openForm = () => {
+    // const year =  moment(new Date()).format('YYYY');
+    // console.log(year.toString())
+    // setTimeout(()=>{
+    //   changeForm('year', year.toString());
+    // }, 100)
+    setVisibleForm(true)
+  }
+
   return <Container>
     <GoBack onClick={() => props.history.push('/folhas-de-ponto')}/>
     <Header>
       <Title>Folhas de ponto</Title>
-      <Button onClick={() => setVisibleForm(true)} icon={<PlusOutlined />} type='primary' >
+      <Button onClick={openForm} icon={<PlusOutlined />} type='primary' >
         Novo folha de ponto
       </Button>
     </Header>
       <Table
-        rowKey="id"
+        rowKey="_id"
         style={{ marginTop: 20 }}
         columns={collums}
         dataSource={list}
@@ -138,8 +147,11 @@ import { Link } from 'react-router-dom';
       okText="Salvar"
       okButtonProps={{ loading: loadingSubmit, icon: <SaveOutlined /> }}
       cancelText="Cancelar"
-      onOk={() => [handleSubmit(), console.log(form)]}
+      onOk={() => [handleSubmit()]}
     >
+      <Form.Item label='Ano' >
+        <Input value={form.year} onChange={(e) => changeForm('year', e.target.value)} />
+      </Form.Item>
       <Form.Item label='Referente á'>
         <Select onChange={(e) => changeForm('regarding', e)} value={form.regarding}>
           <Option value={'0,1'}>Janeiro/Fevereiro</Option>

@@ -5,6 +5,7 @@ import { Container, WrapperValues, Label, Hours } from './styles'
 import { Header, Title, Popconfirm,GoBack } from '../../common/components';
 import InputMask from "react-input-mask";
 import { baseApi as api} from '../../../config/api';
+import axios from 'axios';
 import moment from 'moment';
 import { WarningOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from './utils';
@@ -13,6 +14,7 @@ import openNotificationStatus from '../../common/NotificationStatus';
 
  const TimeSheets = (props) => {
   const [dataSource, setDataSource] = useState({});
+  const [feriados, setFeriados] = useState([]);
   const [stateSave, setStateSave] = useState('save');
   const EditableContext = React.createContext();
   const { id_time_sheet, id_employer } = props.match.params
@@ -42,10 +44,27 @@ import openNotificationStatus from '../../common/NotificationStatus';
   }, []);
 
   useEffect(()=>{
+    console.log(feriados)
+  }, [feriados]);
+
+  useEffect(()=>{
     (async () => {
-      const resp = await api.get(`/time-sheets/${id_time_sheet}`)
-      setDataSource(resp.data)
+      const resp_time = await api.get(`/time-sheets/${id_time_sheet}`)
+      setDataSource(resp_time.data)
+      const { regarding } = resp_time.data;
+      const [m_1, m_2] = regarding.split(',');
+
+      const resp = await axios.get(`https://api.calendario.com.br/?json=true&ano=${resp_time.data?.year}&ibge=5102702&token=cGh5dHRlckBob3RtYWlsLmNvbSZoYXNoPTE0NDU2MTcwOQ`)
+
+      if (parseInt(m_1) === 11) {
+        const resp_newyear = await axios.get(`https://api.calendario.com.br/?json=true&ano=${parseInt(resp_time.data?.year)  + 1}&ibge=5102702&token=cGh5dHRlckBob3RtYWlsLmNvbSZoYXNoPTE0NDU2MTcwOQ`)
+        setFeriados([
+          ...resp.data.map(date => date.date.replace('\\', '')),
+          ...resp_newyear.data.map(date => date.date.replace('\\', '')), ]);
+      } else
+        setFeriados([...resp.data.map(date => date.date.replace('\\', '')),]);
     })()
+
   }, [])
 
   const save = async (data) => {
@@ -143,7 +162,12 @@ import openNotificationStatus from '../../common/NotificationStatus';
   const { createdAt, regarding} = dataSource;
   const created_at = new Date(createdAt);
 
-  const { back_lunch, day_month, day_week, entry, out_lunch, out, month } = row;
+  let { back_lunch, day_month, day_week, entry, out_lunch, out, month, year } = row;
+
+  month = parseInt(month) + 1;
+  if (month.toString().length == 1)
+    month = "0"+month;
+
   let ms_h100 = 0;
   let ms_an = 0;
   let flag_next_day = false
@@ -190,8 +214,8 @@ import openNotificationStatus from '../../common/NotificationStatus';
     hh_out,
   );
   // Math.floor(d.asHours()) + moment.utc(ms_ft).format(":mm")
-  // const d_htrabalhadas = moment.duration(ms_tr)
-  // console.log( Math.floor(d_htrabalhadas.asHours()) + moment.utc(ms_tr).format(":mm"), 'Horas trabalhadas');
+  const d_htrabalhadas = moment.duration(ms_tr)
+  console.log( Math.floor(d_htrabalhadas.asHours()) + moment.utc(ms_tr).format(":mm"), 'Horas trabalhadas', ms_tr);
 
   ms_an = calc_noturno(
     primeiraEntrada,
@@ -234,8 +258,16 @@ import openNotificationStatus from '../../common/NotificationStatus';
     day_week,
     month,
     created_at,
-    day_month
+    day_month,
+    feriados,
+    year,
   )
+
+  let converted_day = day_month;
+  if (converted_day.toString().length == 1)
+    converted_day = "0"+ converted_day
+
+  const date_today  = `${converted_day}/${month}/${year}`
 
   let horas_normal = moment.duration('8', 'h').asMilliseconds();
   if (day_week === 6)
@@ -248,15 +280,16 @@ import openNotificationStatus from '../../common/NotificationStatus';
     // console.log(moment.utc(hsan).format("hh:mm"), 'hsan')
     // console.log(moment.utc(hcan).format("hh:mm"), 'hcan')
     h50 = ms_tr - horas_normal - hcan - ms_h100
-  } else if ( day_week !== 0)
+  } else if ( day_week !== 0 && !feriados.includes(date_today))
     h50 = ms_tr - horas_normal
   // console.log(day_week)
   // console.log(moment.utc(h50).format("hh:mm"), 'h50')
 
-  if(day_week === 0) {
-    ms_h100 = ms_comercial;
+  if(day_week === 0 || feriados.includes(date_today)) {
+    ms_h100 += ms_comercial;
   }
 
+  console.log(date_today, row)
   newData.splice(index, 1, {
     ...item,
     ...row,

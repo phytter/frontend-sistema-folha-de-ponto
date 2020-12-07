@@ -12,7 +12,11 @@ const calc_noturno = (
   created_at,
   row
   ) => {
-  const { day_month, month } = row;
+  let { day_month, month } = row;
+
+  month = parseInt(month) + 1;
+  if (month.toString().length == 1)
+    month = "0"+month;
 
   let init_noturno = `${day_month}/${month}/${created_at.getFullYear()} 21:00`;
   init_noturno = moment(init_noturno,"DD/MM/YYYY HH:mm");
@@ -78,7 +82,11 @@ const calc_comercial = (
   created_at,
   row
   ) => {
-  const { day_month, month } = row;
+  let { day_month, month } = row;
+
+  month = parseInt(month) + 1;
+  if (month.toString().length == 1)
+    month = "0"+month;
 
   let init_comercial = `${day_month}/${month}/${created_at.getFullYear()} 05:00`;
   init_comercial = moment(init_comercial,"DD/MM/YYYY HH:mm");
@@ -148,10 +156,10 @@ const calc_horas_trabalhada = (
   // se caso só tem horario de incio e fim
   // debugger
   if (isNaN(hh_out_lunch) && isNaN(hh_back_lunch) && !isNaN(hh_entry) && !isNaN(hh_out)) {
+    debugger
     const ms = segundaSaida.diff(primeiraEntrada);
     return ms;
   }
-  // debugger
   const ms_ft = primeiraSaida.diff(primeiraEntrada);
   const ms_lt = segundaSaida.diff(segundaEntrada);
   // console.log(moment.utc(ms_lt).format("hh:mm"), 'l time')
@@ -174,16 +182,28 @@ const calc_100 = (
   day_week,
   month,
   created_at,
-  day_month
+  day_month,
+  feriados,
+  year
 ) => {
   // 100% no sabádo
-  if (day_week === 6) {
+
+  let converted_day = parseInt(day_month) + 1;
+  if (converted_day.toString().length == 1)
+    converted_day = "0"+ converted_day
+
+  const new_date = new Date (year, month - 1, parseInt(converted_day))
+  // console.log(moment(new_date).format('DD/MM/YYYY'), month)
+  // const tomorrow = new Date (year, month - 1, parseInt(converted_day), 5)
+  if (day_week === 6 || feriados.includes(moment(new_date).format('DD/MM/YYYY'))) {
     let init_h100 = `${day_month + 1}/${month}/${created_at.getFullYear()} 05:00`
-      init_h100 = moment(init_h100,"DD/MM/YYYY HH:mm")
+      init_h100 = moment(new Date(year, month - 1, parseInt(converted_day), 5)).format("DD/MM/YYYY HH:mm");
+
     let out_100 = `${day_month + 1}/${month}/${created_at.getFullYear()} 21:00`
-      out_100 = moment(out_100,"DD/MM/YYYY HH:mm")
+      out_100 = moment(new Date(year, month - 1, parseInt(converted_day), 21)).format("DD/MM/YYYY HH:mm");
+
     // debugger
-    if (isNaN(hh_out_lunch) && isNaN(hh_back_lunch) && !isNaN(hh_entry) && !isNaN(hh_out) && segundaSaida > init_h100) {
+    if (isNaN(hh_out_lunch) && isNaN(hh_back_lunch) && !isNaN(hh_entry) && !isNaN(hh_out) && segundaSaida > out_100) {
       const ms = segundaSaida.diff(init_h100);
       return ms;
     }
@@ -199,6 +219,7 @@ const calc_100 = (
     console.log(moment.utc(ms_h100).format("hh:mm"), 'Horas 100%')
     return ms_h100;
   }
+
 
   return 0;
 };

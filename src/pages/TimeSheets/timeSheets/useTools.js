@@ -2,10 +2,11 @@ import { useEffect, useState, useCallback } from 'react';
 import Bread from '../../common/bread';
 import openNotificationStatus from '../../common/NotificationStatus';
 import { useLocation } from 'react-router-dom';
+import moment from 'moment';
 
 export default (list, mutate, id_employer) => {
   const [visibleForm, setVisibleForm] = useState(false);
-  const [form, setForm] = useState(false);
+  const [form, setForm] = useState({});
   const [selected, setSelected] = useState(null);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [errors, setErrors] = useState(false);
@@ -17,7 +18,7 @@ export default (list, mutate, id_employer) => {
       setForm(selected);
     } else {
       setSelected(null);
-      setForm({});
+      setForm({ year:  moment(new Date()).format('YYYY') });
     }
   }, [visibleForm]);
 
@@ -104,7 +105,7 @@ export default (list, mutate, id_employer) => {
        return [diaS, parseInt(diaM), mes, ano]
    }
 
-  const generateDays = (mes_ref) => {
+  const generateDays = (mes_ref, year) => {
     const defaultValues = {
       back_lunch: '',
       entry: '',
@@ -117,7 +118,6 @@ export default (list, mutate, id_employer) => {
     };
 
     const current_date = new Date();
-    const year = current_date.getFullYear();
     let [ f_month, l_month] = mes_ref;
     const day_init = new Date (year, f_month, 20 + 1);
     const day_end = new Date (year, f_month+1, 20);
@@ -134,6 +134,7 @@ export default (list, mutate, id_employer) => {
           day_month: current_day[1],
           day_week: current_day[0],
           month: current_day[2],
+          year: current_day[3],
           id: it,
           ...defaultValues,
         })
@@ -163,10 +164,12 @@ export default (list, mutate, id_employer) => {
           return { ...data, docs: newList };
         });
       } else {
+        const year = form.year ? form.year.toString().trim() : moment(new Date()).format('YYYY');
         let mes_ref = form.regarding?.split(',');
-        const days = generateDays([parseInt(mes_ref[0]), parseInt(mes_ref[1])]);
+        const days = generateDays([parseInt(mes_ref[0]), parseInt(mes_ref[1])], year);
         const resp = await serviceApprovalFlow.store({
           ...form,
+          year,
           days,
           id_employer,
         });
