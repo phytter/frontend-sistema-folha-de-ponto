@@ -273,7 +273,13 @@ import openNotificationStatus from '../../common/NotificationStatus';
   let horas_normal = moment.duration('8', 'h').asMilliseconds();
   if (day_week === 6)
     horas_normal = horas_normal - moment.duration('4', 'h').asMilliseconds()
+  if (day_week === 0 || feriados.includes(date_today))
+    horas_normal = 0
   console.log(moment.utc(ms_comercial).format("hh:mm"), 'Horas comercial trabalhadas')
+
+  if(day_week === 0 || feriados.includes(date_today)) {
+    ms_h100 += ms_comercial;
+  }
 
   if (ms_an) {
     // debugger
@@ -288,10 +294,6 @@ import openNotificationStatus from '../../common/NotificationStatus';
     h50 = ms_tr - horas_normal
   // console.log(day_week)
   // console.log(moment.utc(h50).format("hh:mm"), 'h50')
-
-  if(day_week === 0 || feriados.includes(date_today)) {
-    ms_h100 += ms_comercial;
-  }
 
   // console.log(date_today, row)
   newData.splice(index, 1, {
