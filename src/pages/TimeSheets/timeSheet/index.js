@@ -50,10 +50,15 @@ import openNotificationStatus from '../../common/NotificationStatus';
       const { regarding } = resp_time.data;
       const [m_1, m_2] = regarding.split(',');
 
+      const feriados_invalidos = ['Dia Convencional', 'Facultativo']
+
       const resp = await axios.get(`https://api.calendario.com.br/?json=true&ano=${resp_time.data?.year}&ibge=5102702&token=cGh5dHRlckBob3RtYWlsLmNvbSZoYXNoPTE0NDU2MTcwOQ`)
                           .then(resp => {
+                            let carnavais = resp.data.filter(item => item.name === 'Carnaval');
+                            const tam = carnavais.length;
+                            console.log(carnavais, carnavais[tam-2])
                             return resp.data.filter(item => {
-                              if (item.type !== 'Facultativo')
+                              if (!feriados_invalidos.includes(item.type) || (item.date === carnavais[tam-2].date && item.name === 'Carnaval'))
                                 return true;
                               return false;
                             })
@@ -62,7 +67,7 @@ import openNotificationStatus from '../../common/NotificationStatus';
         const resp_newyear = await axios.get(`https://api.calendario.com.br/?json=true&ano=${parseInt(resp_time.data?.year)  + 1}&ibge=5102702&token=cGh5dHRlckBob3RtYWlsLmNvbSZoYXNoPTE0NDU2MTcwOQ`)
                             .then(resp => {
                               return resp.data.filter(item => {
-                                if (item.type !== 'Facultativo')
+                                if (!feriados_invalidos.includes(item.type))
                                   return true;
                                 return false;
                               })
