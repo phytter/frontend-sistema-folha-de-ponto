@@ -51,14 +51,27 @@ import openNotificationStatus from '../../common/NotificationStatus';
       const [m_1, m_2] = regarding.split(',');
 
       const resp = await axios.get(`https://api.calendario.com.br/?json=true&ano=${resp_time.data?.year}&ibge=5102702&token=cGh5dHRlckBob3RtYWlsLmNvbSZoYXNoPTE0NDU2MTcwOQ`)
-
+                          .then(resp => {
+                            return resp.data.filter(item => {
+                              if (item.type !== 'Facultativo')
+                                return true;
+                              return false;
+                            })
+                          })
       if (parseInt(m_1) === 11) {
         const resp_newyear = await axios.get(`https://api.calendario.com.br/?json=true&ano=${parseInt(resp_time.data?.year)  + 1}&ibge=5102702&token=cGh5dHRlckBob3RtYWlsLmNvbSZoYXNoPTE0NDU2MTcwOQ`)
+                            .then(resp => {
+                              return resp.data.filter(item => {
+                                if (item.type !== 'Facultativo')
+                                  return true;
+                                return false;
+                              })
+                            })
         setFeriados([
-          ...resp.data.map(date => date.date.replace('\\', '')),
-          ...resp_newyear.data.map(date => date.date.replace('\\', '')), ]);
+          ...resp.map(date => date.date.replace('\\', '')),
+          ...resp_newyear.map(date => date.date.replace('\\', '')), ]);
       } else
-        setFeriados([...resp.data.map(date => date.date.replace('\\', '')),]);
+        setFeriados([...resp.map(date => date.date.replace('\\', '')),]);
     })()
 
   }, [])
@@ -341,7 +354,7 @@ import openNotificationStatus from '../../common/NotificationStatus';
     {
       title: 'Dia',
       dataIndex: 'day_month',
-      width: '10%',
+      // width: '10%',
       render: (text, record) => {
         return `${text} ${show_name_day(record.day_week)}`
       }
