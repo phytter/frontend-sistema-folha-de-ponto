@@ -276,7 +276,10 @@ import openNotificationStatus from '../../common/NotificationStatus';
   console.log(moment.utc(ms_comercial).format("hh:mm"), 'Horas comercial trabalhadas')
 
   if (ms_an) {
+    // debugger
     hsan = (ms_comercial) <  ms_an ? (horas_normal - ms_comercial) > ms_an ? ms_an : (horas_normal - ms_comercial) : 0;
+    if (hsan < 0 || day_week === 0 || feriados.includes(date_today))
+      hsan = 0
     hcan = ms_an - hsan
     // console.log(moment.utc(hsan).format("hh:mm"), 'hsan')
     // console.log(moment.utc(hcan).format("hh:mm"), 'hcan')
