@@ -16,6 +16,7 @@ import openNotificationStatus from '../../common/NotificationStatus';
   const [dataSource, setDataSource] = useState({});
   const [feriados, setFeriados] = useState([]);
   const [stateSave, setStateSave] = useState('save');
+  const [employer, setEmployer] = useState({});
   const EditableContext = React.createContext();
   const { id_time_sheet, id_employer } = props.match.params
 
@@ -56,7 +57,6 @@ import openNotificationStatus from '../../common/NotificationStatus';
                           .then(resp => {
                             let carnavais = resp.data.filter(item => item.name === 'Carnaval');
                             const tam = carnavais.length;
-                            console.log(carnavais, carnavais[tam-2])
                             return resp.data.filter(item => {
                               if (!feriados_invalidos.includes(item.type) || (item.date === carnavais[tam-2].date && item.name === 'Carnaval'))
                                 return true;
@@ -77,9 +77,47 @@ import openNotificationStatus from '../../common/NotificationStatus';
           ...resp_newyear.map(date => date.date.replace('\\', '')), ]);
       } else
         setFeriados([...resp.map(date => date.date.replace('\\', '')),]);
+
+      try {
+        const resp = await api.get(`/employers/${id_employer}`);
+        setEmployer(resp.data);
+      } catch (error) {
+        console.log('Error employer', e);
+      }
     })()
 
   }, [])
+
+  const showMonth = useCallback((text) => {
+    switch (text) {
+      case '0,1':
+        return 'Janeiro/Fevereiro'
+      case '1,2':
+        return 'Fevereiro/Março'
+      case '2,3':
+        return 'Março/Abril'
+      case '3,4':
+        return 'Abril/Maio'
+      case '4,5':
+        return 'Maio/Julho'
+      case '5,6':
+        return 'Julho/Junho'
+      case '6,7':
+        return 'Junho/Agosto'
+      case '7,8':
+        return 'Agosto/Setembro'
+      case '8,9':
+        return 'Setembro/Outubro'
+      case '9,10':
+        return 'Outubro/Novembro'
+      case '10,11':
+        return 'Novembro/Dezembro'
+      case '11,0':
+        return 'Dezembro/Janeiro'
+      default:
+        break;
+    }
+  }, []);
 
   const save = async (data) => {
     try {
@@ -468,6 +506,15 @@ import openNotificationStatus from '../../common/NotificationStatus';
         {stateSave === 'error' ? 'Salvar' : 'Salvo'}
       </Button>
     </Header>
+
+    <Hours style={{marginTop: 20,  marginBottom: 5}}>
+      <Label>Funcionário: </Label>
+      {employer?.name}
+    </Hours> 
+    <Hours>
+      <Label>Referente á: </Label>
+      {showMonth(dataSource?.regarding)}
+    </Hours> 
 
     <WrapperValues>
       <Row type='flex' justify='center' gutter={30} align='middle'>

@@ -34,7 +34,7 @@ export const WrapperValues = styled.div`
 export const Label = styled.span`
   font-weight: bold;
   margin-right: 10px;
-  font-size: 18px;
+  font-size: 16px;
 `;
 
 export const Hours = styled.div`
