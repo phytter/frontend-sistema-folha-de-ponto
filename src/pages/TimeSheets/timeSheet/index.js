@@ -44,8 +44,11 @@ import openNotificationStatus from '../../common/NotificationStatus';
     let minutes = Math.abs(d.minutes())
     if (minutes.toString().length == 1)
       minutes = "0" + minutes;
-    const time = d.hours() + ":" + minutes
-    return time;
+    // const time = d.hours() + ":" + minutes
+
+    if (d.minutes() < 0 && d.hours() === 0)
+      return "-" + d.hours() + ":" + minutes
+    return d.hours() + ":" + minutes;
   }, []);
 
   useEffect(()=>{
