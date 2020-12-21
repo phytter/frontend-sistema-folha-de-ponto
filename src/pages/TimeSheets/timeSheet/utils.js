@@ -33,6 +33,16 @@ const calc_noturno = (
   init_noturno = moment(init_noturno,"DD/MM/YYYY HH:mm");
   let out_noturno = `${day_month}/${month}/${year} 05:00`;
   out_noturno = handleDate(day_month, month, year, 5, 0)(true)
+
+  // let init_not_y = `${day_month - 1}/${month}/${year} 21:00`;
+  let converted_day = parseInt(day_month) - 1;
+  if (converted_day.toString().length == 1)
+    converted_day = "0"+ converted_day
+  let init_not_y = handleDate(converted_day, month, year, 21, 0)(false)
+  //  moment(init_noturno_y,"DD/MM/YYYY HH:mm");
+
+  let out_not_y = `${day_month}/${month}/${year} 05:00`;
+  out_not_y = handleDate(day_month, month, year, 5, 0)(false)
   //  moment(out_noturno,"DD/MM/YYYY HH:mm").add(1, 'd');
   // Noturnão
   let ms_an = 0;
@@ -46,12 +56,15 @@ const calc_noturno = (
     } else if (primeiraEntrada <= init_noturno && segundaSaida > init_noturno && segundaSaida <= out_noturno) {
       // Começa antes e termina no meio
       ms_an += segundaSaida.diff(init_noturno);
-    } else if (primeiraEntrada >= init_noturno && primeiraEntrada < out_noturno && segundaSaida > out_noturno) {
+    } else if ((primeiraEntrada >= init_noturno && primeiraEntrada < out_noturno && segundaSaida > out_noturno)) {
       // Começa no meio e terminar depois
       ms_an += out_noturno.diff(primeiraEntrada);
     } else if (primeiraEntrada <= init_noturno && segundaSaida >= out_noturno) {
       // Começa antes e termina depois
       ms_an += out_noturno.diff(init_noturno);
+    }
+    if (primeiraEntrada >= init_not_y && primeiraEntrada < out_not_y && segundaSaida > out_not_y) {
+      ms_an += out_not_y.diff(primeiraEntrada);
     }
     return ms_an;
   }
@@ -144,7 +157,7 @@ const calc_comercial = (
     ms_comercial += segundaSaida.diff(init_comercial);
   } else if (segundaEntrada >= init_comercial && segundaEntrada < out_comercial && segundaSaida > out_comercial) {
     // Começa no meio e terminar depois
-    console.log(moment.utc(out_comercial.diff(segundaEntrada)).format("hh:mm"), ' pt2')
+    // console.log(moment.utc(out_comercial.diff(segundaEntrada)).format("hh:mm"), ' pt2')
 
     ms_comercial += out_comercial.diff(segundaEntrada);
   } else if (segundaEntrada <= init_comercial && segundaSaida >= out_comercial) {

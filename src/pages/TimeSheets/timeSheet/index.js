@@ -40,7 +40,11 @@ import openNotificationStatus from '../../common/NotificationStatus';
   const showTime = useCallback((text) => {
     if (!text) return null;
     let d = moment.duration(text);
-    const time = Math.floor(d.asHours()) + moment.utc(text).format(":mm")
+    // const time = Math.floor(d.asHours()) + moment.utc(text).format(":mm")
+    let minutes = Math.abs(d.minutes())
+    if (minutes.toString().length == 1)
+      minutes = "0" + minutes;
+    const time = d.hours() + ":" + minutes
     return time;
   }, []);
 
@@ -339,17 +343,38 @@ import openNotificationStatus from '../../common/NotificationStatus';
 
   if (ms_an) {
     // debugger
-    hsan = (ms_comercial) <  ms_an ? (horas_normal - ms_comercial) > ms_an ? ms_an : (horas_normal - ms_comercial) : 0;
+    hsan = (ms_comercial) <  horas_normal ? (horas_normal - ms_comercial) > ms_an ? ms_an : (horas_normal - ms_comercial) : 0;
+    if (hh_entry < 5 && hh_entry > 0  ) {
+      let out_not = moment.duration(5, 'hours').asMilliseconds()
+      let entry_ = moment.duration({
+        'hours': hh_entry,
+        'minutes': mm_entry
+      }).asMilliseconds()
+      // console.log(out_not, entry_)
+      let temp = out_not - entry_;
+      hsan = temp
+    }
+    console.log(moment.utc(hsan).format("hh:mm"), 'hsan')
+    // console.log(hh_entry, 'primeira')
     if (hsan < 0 || day_week === 0 || feriados.includes(date_today))
       hsan = 0
     hcan = ms_an - hsan
-    // console.log(moment.utc(hsan).format("hh:mm"), 'hsan')
+
     // console.log(moment.utc(hcan).format("hh:mm"), 'hcan')
     h50 = ms_tr - horas_normal - hcan - ms_h100
   } else if ( day_week !== 0 && !feriados.includes(date_today))
     h50 = ms_tr - horas_normal
   // console.log(day_week)
-  // console.log(moment.utc(h50).format("hh:mm"), 'h50')
+  // let teste = + moment.duration(
+  //   {
+  //     minutes: 20,
+  //     hours: 1
+  //   }
+  // ).asMilliseconds()
+  // // h50 = h50 * -1
+  // let d = moment.duration(h50);
+  // const time = Math.floor(d.hours()) + moment.utc(h50).format(":mm")
+  // console.log(time, 'h50', moment.utc(horas_normal).format("hh:mm"),d.minutes(), teste)
 
   // console.log(date_today, row)
   newData.splice(index, 1, {
@@ -357,6 +382,7 @@ import openNotificationStatus from '../../common/NotificationStatus';
     ...row,
     ...{hsan, hcan, h100: ms_h100, h50},
   });
+  console.log(newData)
   // debugger
   setDataSource(prev => ({...prev, days: newData}));
   save({ days: newData });
@@ -432,7 +458,10 @@ import openNotificationStatus from '../../common/NotificationStatus';
       render: (text) => {
         if (!text) return null;
         let d = moment.duration(text);
-        const time = Math.floor(d.asHours()) + moment.utc(text).format(":mm")
+        let minutes = Math.abs(d.minutes())
+        if (minutes.toString().length == 1)
+          minutes = "0" + minutes;
+        const time = d.hours() + ":" + minutes
         return time;
       }
     },
@@ -510,11 +539,11 @@ import openNotificationStatus from '../../common/NotificationStatus';
     <Hours style={{marginTop: 20,  marginBottom: 5}}>
       <Label>Funcionário: </Label>
       {employer?.name}
-    </Hours> 
+    </Hours>
     <Hours>
       <Label>Referente á: </Label>
       {showMonth(dataSource?.regarding)}
-    </Hours> 
+    </Hours>
 
     <WrapperValues>
       <Row type='flex' justify='center' gutter={30} align='middle'>
