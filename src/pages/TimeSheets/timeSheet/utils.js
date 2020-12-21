@@ -79,6 +79,10 @@ const calc_noturno = (
     ms_an += out_noturno.diff(init_noturno);
   }
 
+  if (primeiraEntrada >= init_not_y && primeiraEntrada < out_not_y && primeiraSaida > out_not_y) {
+    ms_an += out_not_y.diff(primeiraEntrada);
+  }
+
   if (segundaEntrada >= init_noturno && segundaSaida <= out_noturno) {
     // Entre o horário
     ms_an += segundaSaida.diff(segundaEntrada);

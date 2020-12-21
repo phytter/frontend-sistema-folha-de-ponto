@@ -335,7 +335,7 @@ import openNotificationStatus from '../../common/NotificationStatus';
     horas_normal = horas_normal - moment.duration('4', 'h').asMilliseconds()
   if (day_week === 0 || feriados.includes(date_today))
     horas_normal = 0
-  console.log(moment.utc(ms_comercial).format("hh:mm"), 'Horas comercial trabalhadas')
+  console.log(moment.utc(ms_comercial).format("hh:mm"),moment(ms_comercial).hours(), 'Horas comercial trabalhadas')
 
   if(day_week === 0 || feriados.includes(date_today)) {
     ms_h100 += ms_comercial;
@@ -344,6 +344,8 @@ import openNotificationStatus from '../../common/NotificationStatus';
   if (ms_an) {
     // debugger
     hsan = (ms_comercial) <  horas_normal ? (horas_normal - ms_comercial) > ms_an ? ms_an : (horas_normal - ms_comercial) : 0;
+    console.log(moment.utc(hsan).format("hh:mm"), 'hsan', hsan)
+
     if (hh_entry < 5 && hh_entry > 0  ) {
       let out_not = moment.duration(5, 'hours').asMilliseconds()
       let entry_ = moment.duration({
@@ -361,7 +363,11 @@ import openNotificationStatus from '../../common/NotificationStatus';
     hcan = ms_an - hsan
 
     // console.log(moment.utc(hcan).format("hh:mm"), 'hcan')
-    h50 = ms_tr - horas_normal - hcan - ms_h100
+    // if (ms_an + ms_comercial < ms_tr)
+    if (ms_tr <= horas_normal)
+      h50 = ms_tr - horas_normal
+    else
+      h50 = ms_tr - horas_normal - hcan - ms_h100
   } else if ( day_week !== 0 && !feriados.includes(date_today))
     h50 = ms_tr - horas_normal
   // console.log(day_week)
@@ -461,8 +467,10 @@ import openNotificationStatus from '../../common/NotificationStatus';
         let minutes = Math.abs(d.minutes())
         if (minutes.toString().length == 1)
           minutes = "0" + minutes;
-        const time = d.hours() + ":" + minutes
-        return time;
+        // console.log(d.hours(), d.minutes())
+        if (d.minutes() < 0 && d.hours() === 0)
+          return "-" + d.hours() + ":" + minutes
+        return d.hours() + ":" + minutes;
       }
     },
     {
