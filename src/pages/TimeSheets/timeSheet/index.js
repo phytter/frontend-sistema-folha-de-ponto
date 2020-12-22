@@ -8,7 +8,7 @@ import { baseApi as api} from '../../../config/api';
 import axios from 'axios';
 import moment from 'moment';
 import { WarningOutlined, CheckCircleOutlined } from '@ant-design/icons'
-import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from './utils';
+import { calc_noturno, calc_horas_trabalhada, calc_100, calc_comercial } from './utils_new';
 import openNotificationStatus from '../../common/NotificationStatus';
 
 
@@ -50,6 +50,21 @@ import openNotificationStatus from '../../common/NotificationStatus';
       return "-" + d.hours() + ":" + minutes
     return d.hours() + ":" + minutes;
   }, []);
+
+  const printTime = (text, label) => {
+    if (!text) return null;
+    let d = moment.duration(text);
+    // const time = Math.floor(d.asHours()) + moment.utc(text).format(":mm")
+    let minutes = Math.abs(d.minutes())
+    if (minutes.toString().length == 1)
+      minutes = "0" + minutes;
+    // const time = d.hours() + ":" + minutes
+
+    if (d.minutes() < 0 && d.hours() === 0)
+      return "-" + d.hours() + ":" + minutes
+    // return d.hours() + ":" + minutes;
+    console.log(d.hours() + ":" + minutes, label);
+  }
 
   useEffect(()=>{
     (async () => {
@@ -223,7 +238,87 @@ import openNotificationStatus from '../../common/NotificationStatus';
     return moment(date)
   }
 
-  const handleSave = row => {
+  const calc_times = (
+    noturno_ant,
+    noturno,
+    comercial,
+    horas_normal,
+    ms_h100,
+    day_week,
+    date_today,
+    total_horas_trab,
+    calculated,
+  ) => {
+    printTime(noturno_ant, 'noturno ant')
+    printTime(noturno, 'noturno')
+    printTime(comercial, 'comercial')
+    // debugger
+    let hsan = 0, hcan = 0, horas_t = 0, h50 = 0, h100 = 0;
+    if (calculated) {
+      hsan = calculated.hsan ?? 0
+      hcan = calculated.hcan ?? 0
+      horas_t = calculated.horas_t ?? 0
+      h50 = calculated.h50 ?? 0
+      h100 = calculated.h100 ?? 0
+    }
+
+    if (ms_h100) {
+      h100 += ms_h100;
+      horas_t += ms_h100;
+    };
+
+    if (noturno_ant) {
+        if (horas_normal > 0)
+          if (noturno_ant > horas_normal) {
+              hsan += horas_normal;
+          } else
+              hsan += noturno_ant;
+
+        if (hsan < noturno_ant)
+            hcan = noturno_ant - hsan
+
+        horas_t += noturno_ant
+    }
+
+    horas_t += comercial
+    // debugger
+    if(day_week === 0 || feriados.includes(date_today)) {
+      h100 += comercial;
+    }
+
+    if (noturno) {
+      // debugger
+        let falta = horas_normal - horas_t;
+        if (falta < 0) falta = 0;
+
+        if (horas_t < horas_normal)
+            if (falta > noturno) {
+                hsan += noturno
+            } else
+                hsan += falta;
+
+        if (falta < noturno)
+            hcan += noturno - falta
+        horas_t += noturno
+    }
+    // debugger
+    if (horas_t > horas_normal) {
+      h50 = total_horas_trab - horas_normal - hcan - h100;
+      if (h50 < 0) h50 = 0;
+    } else if (horas_t < horas_normal) {
+      h50 = horas_t - horas_normal;
+    }
+
+    return {
+      hsan,
+      hcan,
+      horas_t,
+      h50,
+      h100,
+    };
+  }
+
+const handleSave = row => {
     const newData = [...dataSource.days];
     const index = newData.findIndex(item => row.id === item.id);
     const item = newData[index];
@@ -241,7 +336,7 @@ import openNotificationStatus from '../../common/NotificationStatus';
   let ms_h100 = 0;
   let ms_an = 0;
   let flag_next_day = false
-  let hsan = 0, hcan = 0, h50 = 0;
+  // let hsan = 0, hcan = 0, h50 = 0;
 
   // Horario da primeira parte
     let [hh_out_lunch,mm_out_lunch] = out_lunch.split(':');
@@ -263,13 +358,40 @@ import openNotificationStatus from '../../common/NotificationStatus';
     let [hh_back_lunch, mm_back_lunch] = back_lunch.split(':');
     hh_back_lunch = parseInt(hh_back_lunch); mm_back_lunch = parseInt(mm_back_lunch);
 
-    const segundaEntrada = handleDate(day_month, month, year, hh_back_lunch, mm_back_lunch)(hh_back_lunch < hh_out_lunch || flag_next_day );
+    let segundaEntrada = handleDate(day_month, month, year, hh_back_lunch, mm_back_lunch)(hh_back_lunch < hh_out_lunch || flag_next_day );
 
     const segundaSaida = handleDate(day_month, month, year, hh_out, mm_out)(hh_out < hh_entry || hh_out < hh_back_lunch);
 
-  const ms_tr = calc_horas_trabalhada(
+  if (isNaN(hh_out_lunch) && isNaN(hh_back_lunch) && !isNaN(hh_entry) && !isNaN(hh_out)) {
+    const dif = segundaSaida.diff(primeiraEntrada) / 2;
+    segundaEntrada = primeiraEntrada.clone();
+    primeiraSaida = primeiraEntrada.clone();
+    segundaEntrada.add(dif, 'ms')
+    primeiraSaida.add(dif, 'ms')
+    console.log(segundaEntrada.format('DD/MM/YYYY HH:mm'), primeiraSaida.format('DD/MM/YYYY HH:mm'))
+  }
+  // Dia de hoje
+    let converted_day = day_month;
+    if (converted_day.toString().length == 1)
+      converted_day = "0"+ converted_day
+    const date_today  = `${converted_day}/${month}/${year}`
+  // Definição das horas a serem cumprida
+    let horas_normal = moment.duration('8', 'h').asMilliseconds();
+    if (day_week === 6)
+      horas_normal = horas_normal - moment.duration('4', 'h').asMilliseconds()
+    if (day_week === 0 || feriados.includes(date_today))
+      horas_normal = 0
+
+  const ms_tr_1 = calc_horas_trabalhada(
     primeiraEntrada,
     primeiraSaida,
+    hh_out_lunch,
+    hh_back_lunch,
+    hh_entry,
+    hh_out,
+  );
+
+  const ms_tr_2 = calc_horas_trabalhada(
     segundaEntrada,
     segundaSaida,
     hh_out_lunch,
@@ -278,32 +400,30 @@ import openNotificationStatus from '../../common/NotificationStatus';
     hh_out,
   );
   // Math.floor(d.asHours()) + moment.utc(ms_ft).format(":mm")
-  const d_htrabalhadas = moment.duration(ms_tr)
-  console.log( Math.floor(d_htrabalhadas.asHours()) + moment.utc(ms_tr).format(":mm"), 'Horas trabalhadas', ms_tr);
+  // const d_htrabalhadas = moment.duration(ms_tr)
+  // console.log( Math.floor(d_htrabalhadas.asHours()) + moment.utc(ms_tr).format(":mm"), 'Horas trabalhadas', ms_tr);
 
-  ms_an = calc_noturno(
+  const ms_an_1 = calc_noturno(
     primeiraEntrada,
     primeiraSaida,
+    row
+  );
+  const ms_an_2 = calc_noturno(
     segundaEntrada,
     segundaSaida,
-    hh_out_lunch,
-    hh_back_lunch,
-    hh_entry,
-    hh_out,
-    created_at,
     row
   );
 
-  let ms_comercial = calc_comercial(
+  const ms_comercial_1 = calc_comercial(
     primeiraEntrada,
     primeiraSaida,
+    // created_at,
+    row
+  );
+  const ms_comercial_2 = calc_comercial(
     segundaEntrada,
     segundaSaida,
-    hh_out_lunch,
-    hh_back_lunch,
-    hh_entry,
-    hh_out,
-    created_at,
+    // created_at,
     row
   );
 
@@ -313,12 +433,6 @@ import openNotificationStatus from '../../common/NotificationStatus';
   ms_h100 = calc_100(
     primeiraEntrada,
     primeiraSaida,
-    segundaEntrada,
-    segundaSaida,
-    hh_out_lunch,
-    hh_back_lunch,
-    hh_entry,
-    hh_out,
     day_week,
     month,
     created_at,
@@ -327,77 +441,55 @@ import openNotificationStatus from '../../common/NotificationStatus';
     year,
   )
 
-  let converted_day = day_month;
-  if (converted_day.toString().length == 1)
-    converted_day = "0"+ converted_day
+  const ms_h100_2 = calc_100(
+    segundaEntrada,
+    segundaSaida,
+    day_week,
+    month,
+    created_at,
+    day_month,
+    feriados,
+    year,
+  )
+  // console.log(moment.utc(ms_comercial).format("hh:mm"),moment(ms_comercial).hours(), 'Horas comercial trabalhadas')
 
-  const date_today  = `${converted_day}/${month}/${year}`
+  const times_f = calc_times(
+    ms_an_1[1],
+    ms_an_1[0],
+    ms_comercial_1,
+    horas_normal,
+    ms_h100,
+    day_week,
+    date_today,
+    ms_tr_1 + ms_tr_2,
+  );
 
-  let horas_normal = moment.duration('8', 'h').asMilliseconds();
-  if (day_week === 6)
-    horas_normal = horas_normal - moment.duration('4', 'h').asMilliseconds()
-  if (day_week === 0 || feriados.includes(date_today))
-    horas_normal = 0
-  console.log(moment.utc(ms_comercial).format("hh:mm"),moment(ms_comercial).hours(), 'Horas comercial trabalhadas')
+  const times_l = calc_times(
+    ms_an_2[1],
+    ms_an_2[0],
+    ms_comercial_2,
+    horas_normal,
+    ms_h100_2,
+    day_week,
+    date_today,
+    ms_tr_1 + ms_tr_2,
+    times_f,
+  );
 
-  if(day_week === 0 || feriados.includes(date_today)) {
-    ms_h100 += ms_comercial;
-  }
+  printTime(times_l.hsan, 'hsan')
+  printTime(times_l.hcan, 'hcan')
+  printTime(times_l.horas_t, 'horas_t')
+  printTime(times_l.h50, 'h50')
 
-  if (ms_an) {
-    // debugger
-    hsan = (ms_comercial) <  horas_normal ? (horas_normal - ms_comercial) > ms_an ? ms_an : (horas_normal - ms_comercial) : 0;
-    console.log(moment.utc(hsan).format("hh:mm"), 'hsan', hsan)
-
-    if (hh_entry < 5 && hh_entry > 0  ) {
-      let out_not = moment.duration(5, 'hours').asMilliseconds()
-      let entry_ = moment.duration({
-        'hours': hh_entry,
-        'minutes': mm_entry
-      }).asMilliseconds()
-      // console.log(out_not, entry_)
-      let temp = out_not - entry_;
-      hsan = temp
-    }
-    console.log(moment.utc(hsan).format("hh:mm"), 'hsan')
-    // console.log(hh_entry, 'primeira')
-    if (hsan < 0 || day_week === 0 || feriados.includes(date_today))
-      hsan = 0
-    hcan = ms_an - hsan
-
-    // console.log(moment.utc(hcan).format("hh:mm"), 'hcan')
-    // if (ms_an + ms_comercial < ms_tr)
-    if (ms_tr <= horas_normal)
-      h50 = ms_tr - horas_normal
-    else
-      h50 = ms_tr - horas_normal - hcan - ms_h100
-  } else if ( day_week !== 0 && !feriados.includes(date_today))
-    h50 = ms_tr - horas_normal
-  // console.log(day_week)
-  // let teste = + moment.duration(
-  //   {
-  //     minutes: 20,
-  //     hours: 1
-  //   }
-  // ).asMilliseconds()
-  // // h50 = h50 * -1
-  // let d = moment.duration(h50);
-  // const time = Math.floor(d.hours()) + moment.utc(h50).format(":mm")
-  // console.log(time, 'h50', moment.utc(horas_normal).format("hh:mm"),d.minutes(), teste)
-
-  // console.log(date_today, row)
+  const { hsan, hcan, h100, h50} = times_l;
   newData.splice(index, 1, {
     ...item,
     ...row,
-    ...{hsan, hcan, h100: ms_h100, h50},
+    ...{hsan, hcan, h100, h50},
   });
-  console.log(newData)
-  // debugger
+
   setDataSource(prev => ({...prev, days: newData}));
   save({ days: newData });
-  // ms_ft = moment(primeiraSaida,"DD/MM/YYYY HH:mm").diff(moment(primeiraPartida,"DD/MM/YYYY HH:mm"));
-  // let d = moment.duration(ms_ft);
-  // first_time = Math.floor(d.asHours()) + moment.utc(ms_ft).format(":mm")
 };
 
   const show_name_day = (dia) => {
