@@ -24,13 +24,13 @@ import openNotificationStatus from '../../common/NotificationStatus';
     let h50 = 0, h100=0, hsan = 0, hcan = 0;
     days?.forEach(day => {
       if (day.h50)
-      h50+= parseInt(day.h50);
+        h50+= parseInt(day.h50);
       if (day.h100)
-      h100 += parseInt(day.h100);
+        h100 += parseInt(day.h100);
       if (day.hsan)
-      hsan += parseInt(day.hsan);
+        hsan += parseInt(day.hsan);
       if (day.hcan)
-      hcan += parseInt(day.hcan);
+        hcan += parseInt(day.hcan);
     });
     return { h50, hcan, h100, hsan };
   }
@@ -45,10 +45,10 @@ import openNotificationStatus from '../../common/NotificationStatus';
     if (minutes.toString().length == 1)
       minutes = "0" + minutes;
     // const time = d.hours() + ":" + minutes
-
+    // console.log(text, d.minutes(), d.asHours())
     if (d.minutes() < 0 && d.hours() === 0)
       return "-" + d.hours() + ":" + minutes
-    return d.hours() + ":" + minutes;
+    return Math.trunc(d.asHours()) + ":" + minutes;
   }, []);
 
   const printTime = (text, label) => {
