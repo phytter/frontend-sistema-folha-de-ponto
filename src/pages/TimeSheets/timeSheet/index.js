@@ -307,7 +307,7 @@ import openNotificationStatus from '../../common/NotificationStatus';
       if (h50 < 0) h50 = 0;
     } else if (horas_t < horas_normal) {
       h50 = horas_t - horas_normal;
-    }
+    } else h50 = 0
 
     return {
       hsan,
